@@ -1,12 +1,20 @@
-import React from "react";
+import { redirect } from "next/navigation";
 import { Sidebar } from "../../components/layout/Sidebar";
 import { SAVED_ARTICLES } from "../../constants";
 import { ArticleCard } from "../../components/ui/ArticleCard";
 import { MemoryStick as Memory, Gavel, FlaskConical as Science, Coffee as Lifestyle, BarChart3 as Monitoring } from "lucide-react";
 import { Navbar } from "../../components/layout/Navbar";
 import { Footer } from "../../components/layout/Footer";
+import { getSiteUserFromCookie } from "../../lib/site-auth";
+import { SiteLogoutButton } from "../../components/auth/SiteLogoutButton";
 
-export default function UserSettings() {
+export default async function UserSettings() {
+  const user = await getSiteUserFromCookie();
+
+  if (!user) {
+    redirect("/login");
+  }
+
   const interests = [
     { name: "Technology", desc: "AI, Gadgets, Software development", icon: Memory, checked: true },
     { name: "Politics", desc: "Global affairs, Elections, Policy", icon: Gavel, checked: false },
@@ -24,8 +32,15 @@ export default function UserSettings() {
             <Sidebar variant="account" />
             <div className="flex-1">
               <header className="mb-12">
-                <h1 className="font-headline text-4xl font-bold mb-2">Saved Articles</h1>
-                <p className="text-on-surface-variant font-medium">Manage your reading list and content preferences.</p>
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <h1 className="font-headline text-4xl font-bold mb-2">Saved Articles</h1>
+                    <p className="text-on-surface-variant font-medium">
+                      Signed in as {user.name} ({user.email})
+                    </p>
+                  </div>
+                  <SiteLogoutButton />
+                </div>
               </header>
 
               <section className="mb-16">

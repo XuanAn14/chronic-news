@@ -1,12 +1,80 @@
-import React from "react";
 import { ChevronRight } from "lucide-react";
 import { FEATURED_ARTICLE, TECH_ARTICLES } from "../constants";
 import { ArticleCard } from "../components/ui/ArticleCard";
 import { TrendingList } from "../components/ui/TrendingList";
 import { Navbar } from "../components/layout/Navbar";
 import { Footer } from "../components/layout/Footer";
+import prisma from "../lib/prisma";
+import { hasConfiguredDatabase } from "../lib/env";
+import { Category, type Article } from "../types";
 
-export default function Home() {
+function normalizeCategory(value: string): Category {
+  return Object.values(Category).includes(value as Category)
+    ? (value as Category)
+    : Category.Technology;
+}
+
+function mapDbArticle(article: {
+  slug: string;
+  title: string;
+  category: string;
+  author: string;
+  publishedAt: Date | null;
+  featuredImage: string | null;
+  excerpt: string;
+}): Article {
+  return {
+    id: article.slug,
+    title: article.title,
+    category: normalizeCategory(article.category),
+    author: {
+      name: article.author,
+      role: "Editorial Desk",
+      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop",
+    },
+    date: article.publishedAt
+      ? new Date(article.publishedAt).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })
+      : "Now",
+    image:
+      article.featuredImage ||
+      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=1200&h=800&fit=crop",
+    snippet: article.excerpt,
+  };
+}
+
+export default async function Home() {
+  let articles: Array<{
+    slug: string;
+    title: string;
+    category: string;
+    author: string;
+    publishedAt: Date | null;
+    featuredImage: string | null;
+    excerpt: string;
+  }> = [];
+
+  if (hasConfiguredDatabase()) {
+    try {
+      articles = await prisma.article.findMany({
+        where: { status: "Published" },
+        orderBy: { publishedAt: "desc" },
+      });
+    } catch (error) {
+      console.warn("Prisma fetch failed, falling back to static articles", error);
+      articles = [];
+    }
+  }
+
+  const featuredArticle = articles.length > 0 ? mapDbArticle(articles[0]) : FEATURED_ARTICLE;
+  const techArticles = articles
+    .filter((article) => normalizeCategory(article.category) === Category.Technology)
+    .slice(0, 4)
+    .map<Article>(mapDbArticle);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -22,7 +90,7 @@ export default function Home() {
             {/* Main Content Area */}
             <div className="col-span-12 lg:col-span-9 space-y-12">
               {/* Hero Story */}
-              <ArticleCard article={FEATURED_ARTICLE} variant="featured" className="rounded-xl" />
+              <ArticleCard article={featuredArticle} variant="featured" className="rounded-xl" />
 
               {/* Technology Section */}
               <section>
@@ -33,7 +101,7 @@ export default function Home() {
                   </button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {TECH_ARTICLES.map(article => (
+                  {(techArticles.length ? techArticles : TECH_ARTICLES).map(article => (
                     <ArticleCard key={article.id} article={article} />
                   ))}
                 </div>

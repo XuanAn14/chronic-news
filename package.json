@@ -7,10 +7,14 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "clean": "rm -rf .next"
+    "clean": "node -e \"require('fs').rmSync('.next',{ recursive: true, force: true })\"",
+    "db:push": "prisma db push",
+    "db:seed": "node prisma/seed.js",
+    "prisma:generate": "prisma generate"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
+    "@prisma/client": "^5.16.0",
     "clsx": "^2.1.1",
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
@@ -22,6 +26,7 @@
     "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {
+    "prisma": "^5.16.0",
     "@types/express": "^4.17.21",
     "@types/node": "^22.14.0",
     "@types/react": "^18.2.0",

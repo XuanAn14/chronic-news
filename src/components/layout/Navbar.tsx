@@ -1,16 +1,10 @@
-'use client'
-
-import React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { Search, Bell, Bookmark } from "lucide-react";
 import { Category } from "../../types";
+import { getSiteUserFromCookie } from "../../lib/site-auth";
 
-export const Navbar = () => {
-  const pathname = usePathname();
-  const isCMS = pathname.startsWith('/cms');
-
-  if (isCMS) return null;
+export const Navbar = async () => {
+  const user = await getSiteUserFromCookie();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-outline-variant bg-surface/80 backdrop-blur-md">
@@ -43,13 +37,21 @@ export const Navbar = () => {
           <Link href="/settings" className="rounded-full p-2 hover:bg-surface-container transition-colors">
             <Bookmark className="h-5 w-5" />
           </Link>
-          <Link href="/settings" className="h-8 w-8 overflow-hidden rounded-full border border-outline-variant">
-            <img
-              src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop"
-              alt="Profile"
-              className="h-full w-full object-cover"
-            />
-          </Link>
+          {user ? (
+            <Link
+              href="/settings"
+              className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-outline-variant bg-surface-container text-xs font-bold text-on-surface"
+            >
+              {user.name.charAt(0).toUpperCase()}
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-container"
+            >
+              Sign in
+            </Link>
+          )}
         </div>
       </div>
     </header>
