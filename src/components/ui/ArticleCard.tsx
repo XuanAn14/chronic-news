@@ -1,0 +1,125 @@
+import React from "react";
+import Link from "next/link";
+import { Bookmark } from "lucide-react";
+import { type Article } from "../../types";
+import { cn } from "../../lib/utils";
+
+interface ArticleCardProps {
+  article: Article;
+  variant?: "horizontal" | "vertical" | "mini" | "featured";
+  className?: string;
+}
+
+export const ArticleCard = ({ article, variant = "vertical", className }: ArticleCardProps) => {
+  if (variant === "mini") {
+    return (
+      <article className={cn("flex gap-4 group", className)}>
+        <div className="h-20 w-20 flex-shrink-0 overflow-hidden bg-surface-container">
+          {article.image && (
+            <img
+              src={article.image}
+              alt={article.title}
+              className="h-full w-full object-cover transition-transform group-hover:scale-105"
+            />
+          )}
+        </div>
+        <div className="flex flex-col justify-center">
+          <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-secondary">
+            {article.category}
+          </span>
+          <Link href={`/article/${article.id}`} className="font-headline text-sm font-semibold leading-tight group-hover:text-primary">
+            {article.title}
+          </Link>
+        </div>
+      </article>
+    );
+  }
+
+  if (variant === "horizontal") {
+    return (
+      <article className={cn("flex gap-6 p-4 border border-outline-variant rounded-xl hover:shadow-md transition-all group", className)}>
+        <div className="h-32 w-32 flex-shrink-0 overflow-hidden rounded-lg bg-surface-container">
+           <img
+            src={article.image}
+            alt={article.title}
+            className="h-full w-full object-cover transition-transform group-hover:scale-105"
+          />
+        </div>
+        <div className="flex flex-1 flex-col justify-between">
+          <div>
+            <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-secondary">
+              {article.category}
+            </span>
+            <Link href={`/article/${article.id}`} className="font-headline text-lg font-bold leading-tight group-hover:text-primary">
+              {article.title}
+            </Link>
+          </div>
+          <div className="flex items-center justify-between mt-4">
+            <span className="text-xs text-on-surface-variant">
+              {article.date} • {article.readTime}
+            </span>
+            <button className="text-outline hover:text-primary transition-colors">
+              <Bookmark className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      </article>
+    );
+  }
+
+  if (variant === "featured") {
+     return (
+      <article className={cn("group relative aspect-[16/9] w-full overflow-hidden", className)}>
+        <img
+          src={article.image}
+          alt={article.title}
+          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent p-8 flex flex-col justify-end">
+          <span className="mb-3 w-fit bg-primary px-3 py-1 text-xs font-bold uppercase text-white">
+            {article.category}
+          </span>
+          <Link href={`/article/${article.id}`} className="font-headline text-3xl font-bold leading-tight text-white md:text-4xl lg:text-5xl hover:underline">
+            {article.title}
+          </Link>
+          <div className="mt-6 flex items-center gap-6 text-sm text-white/80">
+            <span>By {article.author.name} • {article.date}</span>
+            <button className="flex items-center gap-2 hover:text-white">
+              <Bookmark className="h-4 w-4" />
+              <span className="font-semibold">Read Later</span>
+            </button>
+          </div>
+        </div>
+      </article>
+    );
+  }
+
+  return (
+    <article className={cn("group border border-outline-variant p-4 hover:shadow-sm transition-all", className)}>
+      <div className="aspect-video mb-4 overflow-hidden bg-surface-container">
+        <img
+          src={article.image}
+          alt={article.title}
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+      </div>
+      <span className="mb-2 block text-xs font-semibold uppercase tracking-widest text-primary">
+        {article.category}
+      </span>
+      <Link href={`/article/${article.id}`} className="font-headline text-xl font-bold leading-tight group-hover:text-primary mb-2 block">
+        {article.title}
+      </Link>
+      <p className="line-clamp-2 mb-4 text-sm text-on-surface-variant">
+        {article.snippet}
+      </p>
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-on-surface-variant underline underline-offset-4 decoration-outline-variant">
+          {article.date}
+        </span>
+        <button className="text-outline hover:text-primary transition-colors">
+          <Bookmark className="h-4 w-4" />
+        </button>
+      </div>
+    </article>
+  );
+};
