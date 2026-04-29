@@ -48,7 +48,7 @@ export function FeedControls({
 
   return (
     <div className="rounded-xl border border-outline-variant bg-white p-4 shadow-sm">
-      <div className="grid gap-3 lg:grid-cols-[1.4fr_0.9fr_0.8fr_auto]">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[1.4fr_0.9fr_0.8fr_auto]">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
@@ -96,7 +96,7 @@ export function FeedControls({
         <button
           type="button"
           onClick={() => applyFilters()}
-          className="rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-container"
+          className="rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-container md:col-span-2 xl:col-span-1"
         >
           Apply
         </button>

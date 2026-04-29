@@ -29,7 +29,7 @@ export function NavbarSearch() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="hidden sm:block">
+    <form onSubmit={handleSubmit} className="hidden xl:block">
       <div className="relative">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
         <input
@@ -37,7 +37,7 @@ export function NavbarSearch() {
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search the feed..."
-          className="w-56 rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2 pl-10 text-sm outline-none transition focus:border-primary md:w-64"
+          className="w-40 rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2 pl-10 text-sm outline-none transition focus:border-primary md:w-52 lg:w-64"
         />
       </div>
     </form>

@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { TrendingUp, Mail } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 import { TRENDING_ARTICLES } from "../../constants";
 import { cn } from "../../lib/utils";
 
@@ -31,24 +31,6 @@ export const TrendingList = ({ className }: { className?: string }) => {
             </li>
           ))}
         </ul>
-      </div>
-
-      <div className="bg-primary-container p-8 rounded-2xl text-white shadow-xl">
-        <Mail className="h-8 w-8 mb-4 opacity-80" />
-        <h3 className="font-headline text-xl mb-2 font-bold uppercase tracking-tight">The Daily Brief</h3>
-        <p className="text-sm text-white/80 mb-6 font-medium">
-          Stay informed. Get our morning editorial newsletter delivered to your inbox.
-        </p>
-        <div className="space-y-3">
-          <input
-            type="email"
-            placeholder="Email address"
-            className="w-full bg-white/10 border border-white/20 px-4 py-3 text-sm focus:ring-2 focus:ring-white outline-none rounded-lg placeholder:text-white/50"
-          />
-          <button className="w-full bg-white text-primary font-bold text-sm py-3 rounded-lg hover:bg-surface transition-colors tracking-widest">
-            SUBSCRIBE
-          </button>
-        </div>
       </div>
     </aside>
   );

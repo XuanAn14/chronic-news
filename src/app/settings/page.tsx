@@ -27,19 +27,19 @@ export default async function UserSettings() {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-grow">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex gap-8">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+          <div className="flex flex-col gap-8 lg:flex-row">
             <Sidebar variant="account" />
-            <div className="flex-1">
+            <div className="min-w-0 flex-1">
               <header className="mb-12">
                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                   <div>
-                    <h1 className="font-headline text-4xl font-bold mb-2">Saved Articles</h1>
+                    <h1 className="mb-2 font-headline text-3xl font-bold sm:text-4xl">Saved Articles</h1>
                     <p className="text-on-surface-variant font-medium">
                       Signed in as {user.name} ({user.email})
                     </p>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     {user.role === "AUTHOR" ? (
                       <a
                         href="/author"
@@ -54,9 +54,9 @@ export default async function UserSettings() {
               </header>
 
               <section className="mb-16">
-                <div className="mb-6 flex items-center justify-between">
+                <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <h2 className="font-headline text-2xl font-bold">Saved for Later</h2>
-                  <span className="bg-primary/10 text-primary px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-widest">
+                  <span className="w-fit rounded-lg bg-primary/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-primary">
                     4 ARTICLES
                   </span>
                 </div>
@@ -75,12 +75,15 @@ export default async function UserSettings() {
                   <p className="text-sm text-on-surface-variant font-medium mt-1">Choose the topics you want to see more of in your daily feed.</p>
                 </div>
 
-                <div className="overflow-hidden border border-outline-variant bg-surface-container-lowest rounded-2xl divide-y divide-outline-variant">
+                <div className="overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest divide-y divide-outline-variant">
                   {interests.map((interest) => {
                     const Icon = interest.icon;
                     return (
-                      <div key={interest.name} className="p-6 flex items-center justify-between hover:bg-surface-container-low transition-colors">
-                        <div className="flex items-center gap-4">
+                      <div
+                        key={interest.name}
+                        className="flex flex-col gap-4 p-5 transition-colors hover:bg-surface-container-low sm:flex-row sm:items-center sm:justify-between sm:p-6"
+                      >
+                        <div className="flex items-start gap-4 sm:items-center">
                           <div className="p-3 bg-primary/10 rounded-xl">
                             <Icon className="h-6 w-6 text-primary" />
                           </div>

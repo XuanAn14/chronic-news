@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Bookmark, MessageSquare, Share2, ThumbsUp } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Bookmark, Check, MessageSquare, Share2, ThumbsUp } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 interface CommentItem {
@@ -17,8 +17,25 @@ interface ArticleInteractionsProps {
   initialComments: number;
   initialViews: number;
   initialLiked: boolean;
+  initialSaved: boolean;
   initialCommentList: CommentItem[];
   isLoggedIn: boolean;
+}
+
+function actionButtonClass(active: boolean, tone: "blue" | "amber" | "emerald" = "blue") {
+  if (!active) {
+    return "border-outline-variant bg-surface-container-low text-on-surface-variant hover:border-primary hover:bg-primary hover:text-white";
+  }
+
+  if (tone === "amber") {
+    return "border-amber-200 bg-amber-50 text-amber-700";
+  }
+
+  if (tone === "emerald") {
+    return "border-emerald-200 bg-emerald-50 text-emerald-700";
+  }
+
+  return "border-primary bg-primary text-white";
 }
 
 export function ArticleInteractions({
@@ -27,23 +44,62 @@ export function ArticleInteractions({
   initialComments,
   initialViews,
   initialLiked,
+  initialSaved,
   initialCommentList,
   isLoggedIn,
 }: ArticleInteractionsProps) {
   const [likes, setLikes] = useState(initialLikes);
   const [comments, setComments] = useState(initialComments);
   const [liked, setLiked] = useState(initialLiked);
+  const [saved, setSaved] = useState(initialSaved);
+  const [shared, setShared] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [commentList, setCommentList] = useState(initialCommentList);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const discussionRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+
+  const actionSummary = useMemo(
+    () => [
+      {
+        key: "share",
+        label: shared ? "Copied" : "Share",
+        icon: shared ? Check : Share2,
+        active: shared,
+        tone: "emerald" as const,
+      },
+      {
+        key: "like",
+        label: liked ? "Liked" : "Like",
+        icon: ThumbsUp,
+        active: liked,
+        tone: "blue" as const,
+      },
+      {
+        key: "comment",
+        label: "Comment",
+        icon: MessageSquare,
+        active: false,
+        tone: "blue" as const,
+      },
+      {
+        key: "save",
+        label: saved ? "Saved" : "Save",
+        icon: Bookmark,
+        active: saved,
+        tone: "amber" as const,
+      },
+    ],
+    [liked, saved, shared],
+  );
 
   useEffect(() => {
     setLikes(initialLikes);
     setComments(initialComments);
     setLiked(initialLiked);
+    setSaved(initialSaved);
     setCommentList(initialCommentList);
-  }, [initialLikes, initialComments, initialLiked, initialCommentList]);
+  }, [initialLikes, initialComments, initialLiked, initialSaved, initialCommentList]);
 
   async function handleLike() {
     if (!isLoggedIn) {
@@ -63,6 +119,49 @@ export function ArticleInteractions({
     setLiked(body.liked);
     setLikes(body.likesCount);
     router.refresh();
+  }
+
+  async function handleSave() {
+    if (!isLoggedIn) {
+      router.push("/login");
+      return;
+    }
+
+    const response = await fetch(`/api/articles/${articleId}/save`, {
+      method: "POST",
+    });
+
+    if (!response.ok) {
+      return;
+    }
+
+    const body = await response.json();
+    setSaved(body.saved);
+    router.refresh();
+  }
+
+  async function handleShare() {
+    if (shared) {
+      setShared(false);
+      return;
+    }
+
+    const url = window.location.href;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({ url });
+      } else if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+      }
+      setShared(true);
+    } catch {
+      setShared(false);
+    }
+  }
+
+  function focusDiscussion() {
+    discussionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   async function handleCommentSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -100,30 +199,8 @@ export function ArticleInteractions({
 
   return (
     <div className="space-y-6">
-      <div className="sticky top-32 flex flex-col items-center gap-4">
-        <button className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-container-low text-on-surface-variant shadow-sm transition-all hover:bg-primary hover:text-white">
-          <Share2 className="h-5 w-5" />
-        </button>
-        <button
-          onClick={handleLike}
-          className={`flex h-12 w-12 items-center justify-center rounded-full shadow-sm transition-all ${
-            liked
-              ? "bg-primary text-white"
-              : "bg-surface-container-low text-on-surface-variant hover:bg-primary hover:text-white"
-          }`}
-        >
-          <ThumbsUp className="h-5 w-5" />
-        </button>
-        <button className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-container-low text-on-surface-variant shadow-sm transition-all hover:bg-primary hover:text-white">
-          <MessageSquare className="h-5 w-5" />
-        </button>
-        <button className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-container-low text-on-surface-variant shadow-sm transition-all hover:bg-primary hover:text-white">
-          <Bookmark className="h-5 w-5" />
-        </button>
-      </div>
-
-      <div className="rounded-2xl border border-outline-variant bg-white p-6 shadow-sm">
-        <div className="grid grid-cols-3 gap-4 border-b border-outline-variant pb-4 text-center">
+      <div className="rounded-2xl border border-outline-variant bg-white p-4 shadow-sm sm:p-6">
+        <div className="grid grid-cols-1 gap-4 border-b border-outline-variant pb-4 text-center sm:grid-cols-3">
           <div>
             <p className="text-2xl font-bold text-on-surface">{initialViews.toLocaleString()}</p>
             <p className="text-xs font-semibold uppercase tracking-widest text-on-surface-variant">
@@ -144,8 +221,42 @@ export function ArticleInteractions({
           </div>
         </div>
 
-        <div className="mt-6">
-          <div className="mb-4 flex items-center justify-between">
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {actionSummary.map((action) => {
+            const Icon = action.icon;
+
+            return (
+              <button
+                key={action.key}
+                type="button"
+                onClick={() => {
+                  if (action.key === "share") {
+                    void handleShare();
+                  }
+                  if (action.key === "like") {
+                    void handleLike();
+                  }
+                  if (action.key === "comment") {
+                    focusDiscussion();
+                  }
+                  if (action.key === "save") {
+                    void handleSave();
+                  }
+                }}
+                className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition-all ${actionButtonClass(
+                  action.active,
+                  action.tone,
+                )}`}
+              >
+                <Icon className="h-4 w-4" />
+                <span>{action.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div ref={discussionRef} className="mt-6">
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <h3 className="font-headline text-xl font-bold text-on-surface">Discussion</h3>
             <span className="text-xs font-semibold uppercase tracking-widest text-on-surface-variant">
               {comments} items
@@ -160,11 +271,11 @@ export function ArticleInteractions({
               placeholder={isLoggedIn ? "Add your comment..." : "Sign in to comment"}
               className="w-full rounded-xl border border-outline-variant bg-surface-container-low px-4 py-3 text-sm outline-none focus:border-primary"
             />
-            <div className="flex justify-end">
+            <div className="flex justify-stretch sm:justify-end">
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-container disabled:opacity-60"
+                className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-container disabled:opacity-60 sm:w-auto"
               >
                 {isSubmitting ? "Posting..." : "Post comment"}
               </button>
@@ -174,8 +285,11 @@ export function ArticleInteractions({
           <div className="space-y-4">
             {commentList.length ? (
               commentList.map((comment) => (
-                <div key={comment.id} className="rounded-xl border border-outline-variant bg-surface-container-low p-4">
-                  <div className="flex items-center justify-between gap-3">
+                <div
+                  key={comment.id}
+                  className="rounded-xl border border-outline-variant bg-surface-container-low p-4"
+                >
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                     <p className="font-semibold text-on-surface">{comment.authorName}</p>
                     <p className="text-xs text-on-surface-variant">
                       {new Date(comment.createdAt).toLocaleString("en-US", {

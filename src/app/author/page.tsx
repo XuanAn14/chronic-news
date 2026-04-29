@@ -61,7 +61,7 @@ export default async function AuthorPage() {
               {articles.length ? `${articles.filter((item) => item.status === "Published").length} live` : "0 live"}
             </span>
           </div>
-          <div className="text-3xl font-bold">{totalReads.toLocaleString()}</div>
+          <div className="text-2xl font-bold sm:text-3xl">{totalReads.toLocaleString()}</div>
         </div>
         <div className="rounded-lg border border-outline-variant bg-white p-4">
           <div className="mb-2 flex items-start justify-between">
@@ -69,7 +69,7 @@ export default async function AuthorPage() {
               Avg Read Time
             </span>
           </div>
-          <div className="text-3xl font-bold">{avgReadTime}</div>
+          <div className="text-2xl font-bold sm:text-3xl">{avgReadTime}</div>
         </div>
         <div className="rounded-lg border border-outline-variant bg-white p-4">
           <div className="mb-2 flex items-start justify-between">
@@ -77,7 +77,7 @@ export default async function AuthorPage() {
               Likes
             </span>
           </div>
-          <div className="text-3xl font-bold">{totalLikes.toLocaleString()}</div>
+          <div className="text-2xl font-bold sm:text-3xl">{totalLikes.toLocaleString()}</div>
         </div>
         <div className="rounded-lg border border-outline-variant bg-white p-4">
           <div className="mb-2 flex items-start justify-between">
@@ -85,21 +85,21 @@ export default async function AuthorPage() {
               Comments
             </span>
           </div>
-          <div className="text-3xl font-bold">{totalComments.toLocaleString()}</div>
+          <div className="text-2xl font-bold sm:text-3xl">{totalComments.toLocaleString()}</div>
         </div>
       </section>
 
       <div className="grid grid-cols-12 gap-4">
         <div className="col-span-12 space-y-4 lg:col-span-8">
           <div className="overflow-hidden rounded-lg border border-outline-variant bg-white">
-            <div className="flex items-center justify-between border-b border-outline-variant bg-gray-50/50 p-4">
+            <div className="flex flex-col gap-2 border-b border-outline-variant bg-gray-50/50 p-4 sm:flex-row sm:items-center sm:justify-between">
               <h3 className="font-headline text-lg font-semibold">Recent Articles</h3>
               <Link href="/author/editor" className="text-sm font-semibold text-primary hover:underline">
                 New Article
               </Link>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-left">
+              <table className="min-w-[720px] w-full text-left">
                 <thead className="border-b border-outline-variant bg-white text-xs font-semibold text-tertiary">
                   <tr>
                     <th className="px-4 py-3">TITLE</th>
@@ -165,9 +165,9 @@ export default async function AuthorPage() {
             </div>
           </div>
 
-          <div className="relative overflow-hidden rounded-lg bg-blue-600 p-6 text-white shadow-lg">
+          <div className="relative overflow-hidden rounded-lg bg-blue-600 p-5 text-white shadow-lg sm:p-6">
             <div className="relative z-10">
-              <h3 className="font-headline text-2xl font-semibold">Have a lead?</h3>
+              <h3 className="font-headline text-xl font-semibold sm:text-2xl">Have a lead?</h3>
               <p className="mb-4 mt-2 text-blue-100">
                 Start a new draft and continue publishing under your own author account.
               </p>
