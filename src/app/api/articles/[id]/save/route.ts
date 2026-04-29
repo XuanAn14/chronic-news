@@ -54,6 +54,7 @@ export async function POST(
 
   revalidatePath("/");
   revalidatePath("/settings");
+  revalidatePath("/history");
   revalidatePath(`/article/${article.slug}`);
 
   return NextResponse.json({

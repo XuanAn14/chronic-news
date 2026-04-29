@@ -1,12 +1,21 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Sidebar } from "../../components/layout/Sidebar";
-import { SAVED_ARTICLES } from "../../constants";
 import { ArticleCard } from "../../components/ui/ArticleCard";
-import { MemoryStick as Memory, Gavel, FlaskConical as Science, Coffee as Lifestyle, BarChart3 as Monitoring } from "lucide-react";
+import {
+  MemoryStick as Memory,
+  Gavel,
+  FlaskConical as Science,
+  Coffee as Lifestyle,
+  BarChart3 as Monitoring,
+} from "lucide-react";
 import { Navbar } from "../../components/layout/Navbar";
 import { Footer } from "../../components/layout/Footer";
 import { getSiteUserFromCookie } from "../../lib/site-auth";
 import { SiteLogoutButton } from "../../components/auth/SiteLogoutButton";
+import prisma from "../../lib/prisma";
+import { hasConfiguredDatabase } from "../../lib/env";
+import { mapDbArticle } from "../../lib/articles";
 
 export default async function UserSettings() {
   const user = await getSiteUserFromCookie();
@@ -22,6 +31,32 @@ export default async function UserSettings() {
     { name: "Lifestyle", desc: "Travel, Design, Culture", icon: Lifestyle, checked: true },
     { name: "Business", desc: "Finance, Markets, Economy", icon: Monitoring, checked: false },
   ];
+
+  const savedArticles = hasConfiguredDatabase()
+    ? await prisma.articleSave.findMany({
+        where: {
+          userId: user.id,
+        },
+        include: {
+          article: {
+            select: {
+              slug: true,
+              title: true,
+              category: true,
+              author: true,
+              publishedAt: true,
+              featuredImage: true,
+              excerpt: true,
+              content: true,
+              views: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      })
+    : [];
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -41,12 +76,12 @@ export default async function UserSettings() {
                   </div>
                   <div className="flex flex-wrap items-center gap-3">
                     {user.role === "AUTHOR" ? (
-                      <a
+                      <Link
                         href="/author"
                         className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-container"
                       >
                         Author Studio
-                      </a>
+                      </Link>
                     ) : null}
                     <SiteLogoutButton />
                   </div>
@@ -57,14 +92,24 @@ export default async function UserSettings() {
                 <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <h2 className="font-headline text-2xl font-bold">Saved for Later</h2>
                   <span className="w-fit rounded-lg bg-primary/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-primary">
-                    4 ARTICLES
+                    {savedArticles.length} ARTICLES
                   </span>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {SAVED_ARTICLES.map((article) => (
-                    <ArticleCard key={article.id} article={article} variant="horizontal" />
-                  ))}
-                </div>
+                {savedArticles.length ? (
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    {savedArticles.map((saved) => (
+                      <ArticleCard
+                        key={saved.id}
+                        article={mapDbArticle(saved.article)}
+                        variant="horizontal"
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-dashed border-outline-variant bg-surface-container-low p-8 text-sm text-on-surface-variant">
+                    No saved articles yet. Use the save button on any article to build your reading list.
+                  </div>
+                )}
               </section>
 
               <hr className="border-outline-variant mb-16" />
@@ -72,7 +117,9 @@ export default async function UserSettings() {
               <section>
                 <div className="mb-8">
                   <h2 className="font-headline text-2xl font-bold">Interests & Personalization</h2>
-                  <p className="text-sm text-on-surface-variant font-medium mt-1">Choose the topics you want to see more of in your daily feed.</p>
+                  <p className="mt-1 text-sm font-medium text-on-surface-variant">
+                    Choose the topics you want to see more of in your daily feed.
+                  </p>
                 </div>
 
                 <div className="overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest divide-y divide-outline-variant">
@@ -84,17 +131,17 @@ export default async function UserSettings() {
                         className="flex flex-col gap-4 p-5 transition-colors hover:bg-surface-container-low sm:flex-row sm:items-center sm:justify-between sm:p-6"
                       >
                         <div className="flex items-start gap-4 sm:items-center">
-                          <div className="p-3 bg-primary/10 rounded-xl">
+                          <div className="rounded-xl bg-primary/10 p-3">
                             <Icon className="h-6 w-6 text-primary" />
                           </div>
                           <div>
-                            <h3 className="font-headline font-bold text-lg">{interest.name}</h3>
+                            <h3 className="font-headline text-lg font-bold">{interest.name}</h3>
                             <p className="text-sm text-on-surface-variant">{interest.desc}</p>
                           </div>
                         </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input type="checkbox" className="sr-only peer" defaultChecked={interest.checked} />
-                          <div className="w-11 h-6 bg-outline-variant peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                        <label className="relative inline-flex cursor-pointer items-center">
+                          <input type="checkbox" className="peer sr-only" defaultChecked={interest.checked} />
+                          <div className="h-6 w-11 rounded-full bg-outline-variant peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/25 peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-['']" />
                         </label>
                       </div>
                     );

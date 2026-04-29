@@ -87,12 +87,12 @@ export function NotificationBell({ className, iconClassName }: NotificationBellP
       </button>
 
       {open ? (
-        <div className="absolute right-0 top-full z-50 mt-2 w-[min(24rem,calc(100vw-1.5rem))] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+        <div className="fixed left-3 right-3 top-16 z-50 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:w-[24rem]">
           <div className="border-b border-slate-200 px-4 py-3">
             <p className="text-sm font-semibold text-slate-900">Notifications</p>
             <p className="mt-1 text-xs text-slate-500">Fresh signals based on your activity.</p>
           </div>
-          <div className="max-h-[28rem] overflow-y-auto">
+          <div className="max-h-[min(24rem,calc(100vh-5.5rem))] overflow-y-auto sm:max-h-[28rem]">
             {loading ? (
               <div className="px-4 py-6 text-sm text-slate-500">Loading notifications...</div>
             ) : items.length ? (

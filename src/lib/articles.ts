@@ -1,5 +1,11 @@
 import { Category, type Article } from "../types";
 
+export function estimateReadTimeMinutes(content?: string, excerpt?: string) {
+  const source = `${content ?? ""} ${excerpt ?? ""}`.trim();
+  const wordCount = source ? source.split(/\s+/).filter(Boolean).length : 0;
+  return Math.max(1, Math.ceil(wordCount / 220));
+}
+
 export function normalizeCategory(value: string): Category {
   return Object.values(Category).includes(value as Category)
     ? (value as Category)
@@ -27,8 +33,11 @@ export function mapDbArticle(article: {
   publishedAt: Date | null;
   featuredImage: string | null;
   excerpt: string;
+  content?: string;
   views?: number;
 }): Article {
+  const readTimeMinutes = estimateReadTimeMinutes(article.content, article.excerpt);
+
   return {
     id: article.slug,
     title: article.title,
@@ -49,6 +58,7 @@ export function mapDbArticle(article: {
       article.featuredImage ||
       "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=1200&h=800&fit=crop",
     snippet: article.excerpt,
+    readTime: `${readTimeMinutes} min read`,
     views: article.views?.toLocaleString(),
   };
 }
