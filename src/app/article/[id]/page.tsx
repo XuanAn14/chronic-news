@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { unstable_noStore as noStore } from "next/cache";
 import { notFound } from "next/navigation";
 import { ChevronRight } from "lucide-react";
@@ -8,6 +9,35 @@ import prisma from "../../../lib/prisma";
 import { hasConfiguredDatabase } from "../../../lib/env";
 import { getSiteUserFromCookie } from "../../../lib/site-auth";
 import { ArticleInteractions } from "../../../components/article/ArticleInteractions";
+
+export async function generateMetadata(props: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const params = await props.params;
+
+  if (!hasConfiguredDatabase()) {
+    return {};
+  }
+
+  const article = await prisma.article.findUnique({
+    where: { slug: params.id },
+    select: {
+      title: true,
+      excerpt: true,
+      metaTitle: true,
+      metaDescription: true,
+    },
+  });
+
+  if (!article) {
+    return {};
+  }
+
+  return {
+    title: article.metaTitle || article.title,
+    description: article.metaDescription || article.excerpt,
+  };
+}
 
 function renderParagraphs(content: string) {
   return content.split(/\n\n+/).map((paragraph, index) => (

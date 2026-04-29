@@ -54,6 +54,8 @@ model Article {
   id            String     @id @default(cuid())
   title         String
   slug          String     @unique
+  metaTitle     String?
+  metaDescription String?
   excerpt       String
   content       String
   category      String

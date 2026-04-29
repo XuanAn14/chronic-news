@@ -30,11 +30,14 @@ export function AdminEditorForm() {
   const [title, setTitle] = useState("");
   const [excerpt, setExcerpt] = useState("");
   const [content, setContent] = useState("");
+  const [metaTitle, setMetaTitle] = useState("");
+  const [metaDescription, setMetaDescription] = useState("");
   const [category, setCategory] = useState("Technology");
   const [status, setStatus] = useState("Draft");
   const [featuredImage, setFeaturedImage] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const router = useRouter();
 
   const slugPreview = useMemo(() => slugify(title) || "new-article-draft-01", [title]);
@@ -56,6 +59,8 @@ export function AdminEditorForm() {
         title,
         excerpt,
         content,
+        metaTitle,
+        metaDescription,
         category,
         status: nextStatus,
         featuredImage,
@@ -77,6 +82,35 @@ export function AdminEditorForm() {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     await submitArticle(status as "Draft" | "Published");
+  }
+
+  async function handleImageUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    setIsUploading(true);
+    setError("");
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch("/api/uploads/image", {
+      method: "POST",
+      body: formData,
+    });
+
+    setIsUploading(false);
+
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      setError(body?.error || "Could not upload image.");
+      return;
+    }
+
+    const body = await response.json();
+    setFeaturedImage(body.url);
   }
 
   const rightPanel = (
@@ -143,11 +177,11 @@ export function AdminEditorForm() {
             <label className="text-[10px] font-bold uppercase text-slate-500">Meta Title</label>
             <input
               type="text"
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
+              value={metaTitle}
+              onChange={(event) => setMetaTitle(event.target.value)}
               className="w-full rounded border border-slate-200 p-2 text-sm"
             />
-            <p className="text-right text-[10px] text-slate-400">{title.length}/60 chars</p>
+            <p className="text-right text-[10px] text-slate-400">{metaTitle.length}/60 chars</p>
           </div>
           <div className="space-y-1">
             <label className="text-[10px] font-bold uppercase text-slate-500">
@@ -155,20 +189,20 @@ export function AdminEditorForm() {
             </label>
             <textarea
               rows={3}
-              value={excerpt}
-              onChange={(event) => setExcerpt(event.target.value)}
+              value={metaDescription}
+              onChange={(event) => setMetaDescription(event.target.value)}
               className="w-full rounded border border-slate-200 p-2 text-sm"
             />
-            <p className="text-right text-[10px] text-slate-400">{excerpt.length}/160 chars</p>
+            <p className="text-right text-[10px] text-slate-400">{metaDescription.length}/160 chars</p>
           </div>
         </div>
         <div className="rounded border border-blue-100 bg-blue-50 p-3 text-xs text-blue-800">
           <p className="mb-1 font-bold">Google Preview:</p>
           <p className="truncate font-medium text-blue-600">
-            {title || "New article draft"} - Chronicle
+            {metaTitle || title || "New article draft"} - Chronicle
           </p>
           <p className="mt-1 line-clamp-2 text-slate-500">
-            {excerpt || "Describe how this article should appear in search results."}
+            {metaDescription || excerpt || "Describe how this article should appear in search results."}
           </p>
         </div>
       </div>
@@ -264,21 +298,32 @@ export function AdminEditorForm() {
         <label className="block">
           <span className="mb-2 block text-sm font-semibold text-slate-700">Cover Image URL</span>
           <input
-            type="url"
+            type="text"
             value={featuredImage}
             onChange={(event) => setFeaturedImage(event.target.value)}
-            placeholder="https://..."
+            placeholder="/uploads/... or https://..."
             className="w-full rounded-xl border border-slate-200 bg-white p-4 text-sm shadow-sm outline-none transition focus:border-primary"
           />
         </label>
 
-        <div className="cursor-pointer rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 p-12 text-center text-slate-400 transition-colors hover:border-primary-container hover:bg-blue-50">
+        <label className="block cursor-pointer rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 p-12 text-center text-slate-400 transition-colors hover:border-primary-container hover:bg-blue-50">
+          <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
           <UploadCloud className="mx-auto mb-4 h-10 w-10" />
-          <p className="font-headline text-lg font-semibold text-slate-700">Add Cover Image</p>
+          <p className="font-headline text-lg font-semibold text-slate-700">
+            {isUploading ? "Uploading image..." : "Add Cover Image"}
+          </p>
           <p className="mt-2 text-xs font-semibold">
             Recommended size: 1200x630px (JPG, PNG)
           </p>
-        </div>
+        </label>
+
+        {featuredImage ? (
+          <img
+            src={featuredImage}
+            alt="Cover preview"
+            className="h-56 w-full rounded-xl border border-slate-200 object-cover"
+          />
+        ) : null}
 
         {error ? <p className="text-sm text-red-500">{error}</p> : null}
       </form>

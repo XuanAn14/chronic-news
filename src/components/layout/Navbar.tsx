@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { Search, Bell, Bookmark } from "lucide-react";
+import { Bell, Bookmark, Search } from "lucide-react";
 import { Category } from "../../types";
 import { getSiteUserFromCookie } from "../../lib/site-auth";
+import { NavbarSearch } from "./NavbarSearch";
 
 export const Navbar = async () => {
   const user = await getSiteUserFromCookie();
@@ -35,9 +36,13 @@ export const Navbar = async () => {
               Author Studio
             </Link>
           ) : null}
-          <button className="rounded-full p-2 hover:bg-surface-container transition-colors">
+          <NavbarSearch />
+          <Link
+            href="/"
+            className="rounded-full p-2 hover:bg-surface-container transition-colors sm:hidden"
+          >
             <Search className="h-5 w-5" />
-          </button>
+          </Link>
           <button className="relative rounded-full p-2 hover:bg-surface-container transition-colors">
             <Bell className="h-5 w-5" />
             <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-secondary" />

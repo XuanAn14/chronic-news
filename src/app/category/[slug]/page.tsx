@@ -5,16 +5,22 @@ import { ArrowRight, ChevronRight, Mail, Search } from "lucide-react";
 import prisma from "../../../lib/prisma";
 import { hasConfiguredDatabase } from "../../../lib/env";
 import { categoryToSlug, mapDbArticle, slugToCategory } from "../../../lib/articles";
+import { FeedControls } from "../../../components/feed/FeedControls";
 import { Navbar } from "../../../components/layout/Navbar";
 import { Footer } from "../../../components/layout/Footer";
+import { Category } from "../../../types";
 
 export default async function CategoryPage(props: {
   params: Promise<{ slug: string }>;
+  searchParams?: Promise<{ q?: string; sort?: string }>;
 }) {
   noStore();
 
   const params = await props.params;
+  const searchParams = props.searchParams ? await props.searchParams : {};
   const category = slugToCategory(params.slug);
+  const query = searchParams?.q?.trim() || "";
+  const sort = searchParams?.sort === "popular" ? "popular" : "latest";
 
   if (!category) {
     notFound();
@@ -28,11 +34,21 @@ export default async function CategoryPage(props: {
     where: {
       status: "Published",
       category,
+      ...(query
+        ? {
+            OR: [
+              { title: { contains: query, mode: "insensitive" } },
+              { excerpt: { contains: query, mode: "insensitive" } },
+              { content: { contains: query, mode: "insensitive" } },
+              { author: { contains: query, mode: "insensitive" } },
+            ],
+          }
+        : {}),
     },
-    orderBy: [
-      { publishedAt: "desc" },
-      { createdAt: "desc" },
-    ],
+    orderBy:
+      sort === "popular"
+        ? [{ views: "desc" }, { publishedAt: "desc" }]
+        : [{ publishedAt: "desc" }, { createdAt: "desc" }],
     take: 20,
   });
 
@@ -69,6 +85,17 @@ export default async function CategoryPage(props: {
           <ChevronRight className="h-3.5 w-3.5" />
           <span className="font-bold text-primary">{category}</span>
         </nav>
+
+        <div className="mb-8">
+          <FeedControls
+            categories={Object.values(Category)}
+            currentCategory={category}
+            currentQuery={query}
+            currentSort={sort}
+            lockCategory
+            placeholder={`Search ${category.toLowerCase()} coverage...`}
+          />
+        </div>
 
         <div className="grid grid-cols-12 gap-4">
           <div className="col-span-12 flex flex-col gap-6 lg:col-span-9">

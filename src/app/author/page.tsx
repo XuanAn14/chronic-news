@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import prisma from "../../lib/prisma";
 import { getAuthorFromCookie } from "../../lib/site-auth";
 import { AuthorShell } from "../../components/author/AuthorShell";
+import { AuthorDeleteButton } from "../../components/author/AuthorDeleteButton";
 
 export default async function AuthorPage() {
   noStore();
@@ -105,6 +106,7 @@ export default async function AuthorPage() {
                     <th className="px-4 py-3 text-center">STATUS</th>
                     <th className="px-4 py-3 text-right">VIEWS</th>
                     <th className="px-4 py-3 text-right">ENGAGEMENT</th>
+                    <th className="px-4 py-3 text-right">ACTIONS</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-outline-variant">
@@ -138,11 +140,22 @@ export default async function AuthorPage() {
                           <span>{article._count.likes} likes</span>
                         </div>
                       </td>
+                      <td className="px-4 py-4 text-right">
+                        <div className="flex justify-end gap-3">
+                          <Link
+                            href={`/author/editor/${article.id}`}
+                            className="text-xs font-semibold text-primary transition hover:underline"
+                          >
+                            Edit
+                          </Link>
+                          <AuthorDeleteButton articleId={article.id} />
+                        </div>
+                      </td>
                     </tr>
                   ))}
                   {!articles.length ? (
                     <tr>
-                      <td colSpan={4} className="px-4 py-10 text-center text-sm text-slate-500">
+                      <td colSpan={5} className="px-4 py-10 text-center text-sm text-slate-500">
                         No articles yet. Publish your first story from the author studio.
                       </td>
                     </tr>

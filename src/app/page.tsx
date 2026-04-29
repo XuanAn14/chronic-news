@@ -5,15 +5,24 @@ import { ArticleCard } from "../components/ui/ArticleCard";
 import { TrendingList } from "../components/ui/TrendingList";
 import { Navbar } from "../components/layout/Navbar";
 import { Footer } from "../components/layout/Footer";
+import { FeedControls } from "../components/feed/FeedControls";
 import prisma from "../lib/prisma";
 import { hasConfiguredDatabase } from "../lib/env";
 import { Category, type Article } from "../types";
 import { categoryToSlug, mapDbArticle, normalizeCategory } from "../lib/articles";
 
-export default async function Home() {
+export default async function Home(props: {
+  searchParams?: Promise<{ q?: string; category?: string; sort?: string }>;
+}) {
   noStore();
 
+  const searchParams = props.searchParams ? await props.searchParams : {};
+  const query = searchParams?.q?.trim() || "";
+  const selectedCategory = searchParams?.category?.trim() || "";
+  const sort = searchParams?.sort === "popular" ? "popular" : "latest";
+
   let articles: Array<{
+    id: string;
     slug: string;
     title: string;
     category: string;
@@ -21,14 +30,31 @@ export default async function Home() {
     publishedAt: Date | null;
     featuredImage: string | null;
     excerpt: string;
+    views: number;
   }> = [];
 
   if (hasConfiguredDatabase()) {
     try {
       articles = await prisma.article.findMany({
-        where: { status: "Published" },
-        orderBy: { publishedAt: "desc" },
-        take: 12,
+        where: {
+          status: "Published",
+          ...(selectedCategory ? { category: selectedCategory } : {}),
+          ...(query
+            ? {
+                OR: [
+                  { title: { contains: query, mode: "insensitive" } },
+                  { excerpt: { contains: query, mode: "insensitive" } },
+                  { content: { contains: query, mode: "insensitive" } },
+                  { author: { contains: query, mode: "insensitive" } },
+                ],
+              }
+            : {}),
+        },
+        orderBy:
+          sort === "popular"
+            ? [{ views: "desc" }, { publishedAt: "desc" }]
+            : [{ publishedAt: "desc" }, { createdAt: "desc" }],
+        take: 20,
       });
     } catch (error) {
       console.warn("Prisma fetch failed, falling back to static articles", error);
@@ -37,10 +63,15 @@ export default async function Home() {
   }
 
   const featuredArticle = articles.length > 0 ? mapDbArticle(articles[0]) : FEATURED_ARTICLE;
-  const techArticles = articles
-    .filter((article) => normalizeCategory(article.category) === Category.Technology)
+  const sectionCategory = selectedCategory || Category.Technology;
+  const sectionArticles = articles
+    .filter((article) => normalizeCategory(article.category) === sectionCategory)
     .slice(0, 4)
     .map<Article>(mapDbArticle);
+  const latestArticles = articles.slice(1, 7);
+  const popularArticles = [...articles]
+    .sort((a, b) => b.views - a.views)
+    .slice(0, 4);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -53,6 +84,16 @@ export default async function Home() {
             <span className="text-xs font-bold uppercase tracking-[0.2em] text-secondary">Breaking News</span>
           </div>
 
+          <div className="mb-8">
+            <FeedControls
+              categories={Object.values(Category)}
+              currentCategory={selectedCategory}
+              currentQuery={query}
+              currentSort={sort}
+              placeholder="Search the newsroom feed..."
+            />
+          </div>
+
           <div className="newspaper-grid">
             {/* Main Content Area */}
             <div className="col-span-12 lg:col-span-9 space-y-12">
@@ -62,16 +103,18 @@ export default async function Home() {
               {/* Technology Section */}
               <section>
                 <div className="mb-6 flex items-center justify-between border-b-2 border-primary-container pb-2">
-                  <h2 className="font-headline text-2xl font-bold uppercase tracking-tight">Technology</h2>
+                  <h2 className="font-headline text-2xl font-bold uppercase tracking-tight">
+                    {sectionCategory}
+                  </h2>
                   <a
-                    href={`/category/${categoryToSlug(Category.Technology)}`}
+                    href={`/category/${categoryToSlug(sectionCategory)}`}
                     className="flex items-center gap-1 text-xs font-bold text-primary hover:underline"
                   >
                     VIEW ALL <ChevronRight className="h-4 w-4" />
                   </a>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {(techArticles.length ? techArticles : TECH_ARTICLES).map(article => (
+                  {(sectionArticles.length ? sectionArticles : TECH_ARTICLES).map(article => (
                     <ArticleCard key={article.id} article={article} />
                   ))}
                 </div>
@@ -81,18 +124,23 @@ export default async function Home() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                  <section>
                     <div className="mb-6 flex items-center justify-between border-b border-outline-variant pb-2">
-                      <h2 className="font-headline text-sm font-bold uppercase text-secondary">Politics</h2>
+                      <h2 className="font-headline text-sm font-bold uppercase text-secondary">Latest Updates</h2>
                     </div>
                     <div className="space-y-6">
-                      {[1, 2, 3].map(i => (
-                        <article key={i} className="flex justify-between items-start border-b border-surface-container pb-4 last:border-0 group">
+                      {(latestArticles.length ? latestArticles : articles.slice(0, 3)).map((article) => (
+                        <article key={article.id} className="flex justify-between items-start border-b border-surface-container pb-4 last:border-0 group">
                           <div className="flex-1">
-                            <h4 className="font-headline text-sm font-bold leading-tight group-hover:text-secondary transition-colors cursor-pointer">
-                              {i === 1 && "Policy Shift: New Environmental Regulations Proposed"}
-                              {i === 2 && "Voter Sentiment Peaks Ahead of Regional Elections"}
-                              {i === 3 && "Urban Infrastructure: The Debate Over Public Transit Funding"}
-                            </h4>
-                            <span className="text-[10px] text-on-surface-variant font-bold mt-1 block uppercase tracking-wider">{i * 3}h ago</span>
+                            <a href={`/article/${article.slug}`} className="font-headline text-sm font-bold leading-tight group-hover:text-secondary transition-colors cursor-pointer">
+                              {article.title}
+                            </a>
+                            <span className="text-[10px] text-on-surface-variant font-bold mt-1 block uppercase tracking-wider">
+                              {article.publishedAt
+                                ? new Date(article.publishedAt).toLocaleDateString("en-US", {
+                                    month: "short",
+                                    day: "numeric",
+                                  })
+                                : "Now"}
+                            </span>
                           </div>
                         </article>
                       ))}
@@ -101,18 +149,18 @@ export default async function Home() {
 
                   <section>
                     <div className="mb-6 flex items-center justify-between border-b border-outline-variant pb-2">
-                      <h2 className="font-headline text-sm font-bold uppercase text-secondary">Lifestyle</h2>
+                      <h2 className="font-headline text-sm font-bold uppercase text-secondary">Popular Now</h2>
                     </div>
                      <div className="space-y-6">
-                      {[1, 2, 3].map(i => (
-                        <article key={i} className="flex justify-between items-start border-b border-surface-container pb-4 last:border-0 group">
+                      {(popularArticles.length ? popularArticles : articles.slice(0, 3)).map((article) => (
+                        <article key={article.id} className="flex justify-between items-start border-b border-surface-container pb-4 last:border-0 group">
                           <div className="flex-1">
-                            <h4 className="font-headline text-sm font-bold leading-tight group-hover:text-secondary transition-colors cursor-pointer">
-                              {i === 1 && "Sustainable Fashion: Why Less is More this Season"}
-                              {i === 2 && "Minimalist Architecture: Designing for Mental Peace"}
-                              {i === 3 && "Culinary Journeys: The Rise of Plant-Based Fine Dining"}
-                            </h4>
-                            <span className="text-[10px] text-on-surface-variant font-bold mt-1 block uppercase tracking-wider">{i * 2}h ago</span>
+                            <a href={`/article/${article.slug}`} className="font-headline text-sm font-bold leading-tight group-hover:text-secondary transition-colors cursor-pointer">
+                              {article.title}
+                            </a>
+                            <span className="text-[10px] text-on-surface-variant font-bold mt-1 block uppercase tracking-wider">
+                              {article.views.toLocaleString()} reads
+                            </span>
                           </div>
                         </article>
                       ))}

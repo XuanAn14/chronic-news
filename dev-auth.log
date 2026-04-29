@@ -101,3 +101,31 @@
  ○ Compiling /_error ...
  ✓ Compiled /_error in 1962ms (1143 modules)
  GET /login 500 in 5630ms
+ ✓ Compiled in 817ms (440 modules)
+ ✓ Compiled in 1681ms (1022 modules)
+ ✓ Compiled in 584ms (440 modules)
+ ⨯ ./src/app/article/[id]/page.tsx:10:1
+Module not found: Can't resolve '../../../components/article/ArticleInteractions'
+   8 | import { hasConfiguredDatabase } from "../../../lib/env";
+   9 | import { getSiteUserFromCookie } from "../../../lib/site-auth";
+> 10 | import { ArticleInteractions } from "../../../components/article/ArticleInteractions";
+     | ^
+  11 |
+  12 | function renderParagraphs(content: string) {
+  13 |   return content.split(/\n\n+/).map((paragraph, index) => (
+
+https://nextjs.org/docs/messages/module-not-found
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename 'D:\News site\chronic-news\.next\cache\webpack\client-development\3.pack.gz_' -> 'D:\News site\chronic-news\.next\cache\webpack\client-development\3.pack.gz'
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename 'D:\News site\chronic-news\.next\cache\webpack\server-development\12.pack.gz_' -> 'D:\News site\chronic-news\.next\cache\webpack\server-development\12.pack.gz'
+ ✓ Compiled in 1626ms (1038 modules)
+ ✓ Compiled in 774ms (1038 modules)
+ ✓ Compiled in 380ms (445 modules)
+ ✓ Compiled in 578ms (1038 modules)
+ ✓ Compiled in 617ms (1038 modules)
+ ✓ Compiled in 881ms (445 modules)
+ ✓ Compiled in 1255ms (1024 modules)
+ ✓ Compiled in 1132ms (445 modules)
+ ✓ Compiled in 701ms (445 modules)
+ ✓ Compiled in 343ms (445 modules)
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename 'D:\News site\chronic-news\.next\cache\webpack\client-development\0.pack.gz_' -> 'D:\News site\chronic-news\.next\cache\webpack\client-development\0.pack.gz'
+ ✓ Compiled in 1624ms (1043 modules)

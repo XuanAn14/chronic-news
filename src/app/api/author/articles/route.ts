@@ -34,6 +34,8 @@ export async function POST(request: Request) {
   const title = body?.title?.toString().trim();
   const excerpt = body?.excerpt?.toString().trim();
   const content = body?.content?.toString().trim();
+  const metaTitle = body?.metaTitle?.toString().trim() || "";
+  const metaDescription = body?.metaDescription?.toString().trim() || "";
   const category = body?.category?.toString().trim() || "Technology";
   const status = body?.status?.toString().trim() || "Draft";
   const featuredImage = body?.featuredImage?.toString().trim() || "";
@@ -56,6 +58,8 @@ export async function POST(request: Request) {
     data: {
       title,
       slug,
+      metaTitle: metaTitle || null,
+      metaDescription: metaDescription || null,
       excerpt,
       content,
       category,
