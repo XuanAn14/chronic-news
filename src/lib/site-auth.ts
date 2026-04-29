@@ -13,14 +13,26 @@ export async function createSiteUser(input: {
   email: string;
   password: string;
   name: string;
+  role?: "READER" | "AUTHOR";
 }) {
   return prisma.siteUser.create({
     data: {
       email: input.email.trim().toLowerCase(),
       name: input.name.trim(),
       passwordHash: hashSitePassword(input.password),
+      role: input.role ?? "READER",
     },
   });
+}
+
+export async function getAuthorFromCookie() {
+  const user = await getSiteUserFromCookie();
+
+  if (!user || user.role !== "AUTHOR") {
+    return null;
+  }
+
+  return user;
 }
 
 export async function verifySiteCredentials(email: string, password: string) {

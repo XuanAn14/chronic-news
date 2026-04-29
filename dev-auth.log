@@ -44,3 +44,60 @@
  ✓ Compiled /admin/dashboard in 449ms (762 modules)
  GET /admin/dashboard 200 in 2305ms
  GET /admin/dashboard 200 in 2003ms
+ ○ Compiling /admin/editor ...
+ ✓ Compiled /admin/editor in 585ms (765 modules)
+ GET /admin/editor 200 in 1983ms
+ ✓ Compiled in 814ms (483 modules)
+ GET /admin/editor 200 in 2360ms
+ ✓ Compiled in 1806ms (773 modules)
+ ✓ Compiled in 1899ms (773 modules)
+ ✓ Compiled in 660ms (290 modules)
+ ✓ Compiled in 1801ms (759 modules)
+ ✓ Compiled in 1256ms (773 modules)
+ ✓ Compiled in 342ms (290 modules)
+ ○ Compiling /api/auth/login ...
+ ✓ Compiled /api/auth/login in 681ms (502 modules)
+ POST /api/auth/login 200 in 3544ms
+ ✓ Compiled /login in 473ms (508 modules)
+ ⨯ Error: Could not find the module "D:\News site\chronic-news\node_modules\next\dist\next-devtools\userspace\app\segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '2919428704'
+}
+ ⨯ Error: Could not find the module "D:\News site\chronic-news\node_modules\next\dist\next-devtools\userspace\app\segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>)
+    at stringify (<anonymous>) {
+  digest: '1829825217'
+}
+ ⨯ Error: Could not find the module "D:\News site\chronic-news\node_modules\next\dist\next-devtools\userspace\app\segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>)
+    at stringify (<anonymous>) {
+  digest: '1829825217'
+}
+ ⨯ Error: Could not find the module "D:\News site\chronic-news\node_modules\next\dist\next-devtools\userspace\app\segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>)
+    at stringify (<anonymous>) {
+  digest: '1829825217'
+}
+ ⨯ Error: Could not find the module "D:\News site\chronic-news\node_modules\next\dist\next-devtools\userspace\app\segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '2919428704'
+}
+ ⨯ Error: Could not find the module "D:\News site\chronic-news\node_modules\next\dist\next-devtools\userspace\app\segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '2919428704'
+}
+ ⨯ [TypeError: __webpack_modules__[moduleId] is not a function] {
+  digest: '1379566854'
+}
+ ⨯ Error: Could not find the module "D:\News site\chronic-news\node_modules\next\dist\next-devtools\userspace\app\segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '2919428704'
+}
+[TypeError: __webpack_modules__[moduleId] is not a function]
+ ⨯ [TypeError: __webpack_modules__[moduleId] is not a function]
+ ⨯ [TypeError: __webpack_modules__[moduleId] is not a function] {
+  page: '/login'
+}
+ ○ Compiling /_error ...
+ ✓ Compiled /_error in 1962ms (1143 modules)
+ GET /login 500 in 5630ms

@@ -32,9 +32,11 @@ model SiteUser {
   email        String        @unique
   passwordHash String
   name         String
+  role         SiteUserRole  @default(READER)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   sessions     SiteSession[]
+  articles     Article[]     @relation("SiteUserArticles")
 }
 
 model SiteSession {
@@ -47,18 +49,28 @@ model SiteSession {
 }
 
 model Article {
-  id            String    @id @default(cuid())
+  id            String     @id @default(cuid())
   title         String
-  slug          String    @unique
+  slug          String     @unique
   excerpt       String
   content       String
   category      String
-  status        String    @default("Draft")
+  status        String     @default("Draft")
   author        String
   featuredImage String?
   publishedAt   DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  views         Int        @default(0)
+  likesCount    Int        @default(0)
+  commentsCount Int        @default(0)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
   authorRef     AdminUser? @relation("ArticleAuthor", fields: [authorId], references: [id])
   authorId      String?
+  siteAuthor    SiteUser?  @relation("SiteUserArticles", fields: [siteAuthorId], references: [id])
+  siteAuthorId  String?
+}
+
+enum SiteUserRole {
+  READER
+  AUTHOR
 }

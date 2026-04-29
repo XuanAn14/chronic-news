@@ -39,7 +39,17 @@ export default async function UserSettings() {
                       Signed in as {user.name} ({user.email})
                     </p>
                   </div>
-                  <SiteLogoutButton />
+                  <div className="flex items-center gap-3">
+                    {user.role === "AUTHOR" ? (
+                      <a
+                        href="/author"
+                        className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-container"
+                      >
+                        Author Studio
+                      </a>
+                    ) : null}
+                    <SiteLogoutButton />
+                  </div>
                 </div>
               </header>
 

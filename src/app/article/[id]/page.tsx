@@ -40,6 +40,15 @@ export default async function ArticleDetail(props: { params: Promise<{ id: strin
     return notFound();
   }
 
+  await prisma.article.update({
+    where: { id: article.id },
+    data: {
+      views: {
+        increment: 1,
+      },
+    },
+  });
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />

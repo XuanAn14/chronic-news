@@ -31,7 +31,7 @@ const navItems = [
   { label: "Editor", href: "/admin/editor", icon: LayoutDashboard },
   { label: "Comments", href: "#", icon: MessageSquare, disabled: true },
   { label: "Analytics", href: "#", icon: BarChart3, disabled: true },
-  { label: "User Management", href: "#", icon: Users, disabled: true },
+  { label: "User Management", href: "/admin/users", icon: Users },
 ];
 
 export function AdminShell({ title, subtitle, children, rightPanel }: AdminShellProps) {

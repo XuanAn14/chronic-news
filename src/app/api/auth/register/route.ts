@@ -29,7 +29,15 @@ export async function POST(request: Request) {
   try {
     const user = await createSiteUser({ name, email, password });
     const token = await createSiteSession(user.id);
-    const response = NextResponse.json({ success: true, user });
+    const response = NextResponse.json({
+      success: true,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
     setSiteSessionCookie(response, token);
     return response;
   } catch (error) {

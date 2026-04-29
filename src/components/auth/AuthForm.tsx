@@ -34,13 +34,15 @@ export function AuthForm() {
     setIsSubmitting(false);
 
     if (response.ok) {
-      router.push("/settings");
+      const body = await response.json();
+      const destination = body?.user?.role === "AUTHOR" ? "/author" : "/settings";
+      router.push(destination);
       router.refresh();
       return;
     }
 
-    const body = await response.json();
-    setError(body?.error || "Authentication failed.");
+    const errorBody = await response.json();
+    setError(errorBody?.error || "Authentication failed.");
   }
 
   return (

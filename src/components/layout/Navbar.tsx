@@ -27,6 +27,14 @@ export const Navbar = async () => {
         </div>
 
         <div className="flex items-center gap-4">
+          {user?.role === "AUTHOR" ? (
+            <Link
+              href="/author"
+              className="rounded-lg border border-outline-variant px-4 py-2 text-sm font-semibold text-on-surface transition hover:bg-surface-container"
+            >
+              Author Studio
+            </Link>
+          ) : null}
           <button className="rounded-full p-2 hover:bg-surface-container transition-colors">
             <Search className="h-5 w-5" />
           </button>
