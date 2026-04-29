@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import prisma from "../../../../lib/prisma";
 import { getAdminFromCookie } from "../../../../lib/auth";
 
@@ -67,6 +68,10 @@ export async function POST(request: Request) {
       authorId: admin.id,
     },
   });
+
+  revalidatePath("/");
+  revalidatePath("/admin/dashboard");
+  revalidatePath(`/article/${article.slug}`);
 
   return NextResponse.json({ article }, { status: 201 });
 }

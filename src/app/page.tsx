@@ -1,3 +1,4 @@
+import { unstable_noStore as noStore } from "next/cache";
 import { ChevronRight } from "lucide-react";
 import { FEATURED_ARTICLE, TECH_ARTICLES } from "../constants";
 import { ArticleCard } from "../components/ui/ArticleCard";
@@ -7,46 +8,11 @@ import { Footer } from "../components/layout/Footer";
 import prisma from "../lib/prisma";
 import { hasConfiguredDatabase } from "../lib/env";
 import { Category, type Article } from "../types";
-
-function normalizeCategory(value: string): Category {
-  return Object.values(Category).includes(value as Category)
-    ? (value as Category)
-    : Category.Technology;
-}
-
-function mapDbArticle(article: {
-  slug: string;
-  title: string;
-  category: string;
-  author: string;
-  publishedAt: Date | null;
-  featuredImage: string | null;
-  excerpt: string;
-}): Article {
-  return {
-    id: article.slug,
-    title: article.title,
-    category: normalizeCategory(article.category),
-    author: {
-      name: article.author,
-      role: "Editorial Desk",
-      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop",
-    },
-    date: article.publishedAt
-      ? new Date(article.publishedAt).toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        })
-      : "Now",
-    image:
-      article.featuredImage ||
-      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=1200&h=800&fit=crop",
-    snippet: article.excerpt,
-  };
-}
+import { categoryToSlug, mapDbArticle, normalizeCategory } from "../lib/articles";
 
 export default async function Home() {
+  noStore();
+
   let articles: Array<{
     slug: string;
     title: string;
@@ -62,6 +28,7 @@ export default async function Home() {
       articles = await prisma.article.findMany({
         where: { status: "Published" },
         orderBy: { publishedAt: "desc" },
+        take: 12,
       });
     } catch (error) {
       console.warn("Prisma fetch failed, falling back to static articles", error);
@@ -96,9 +63,12 @@ export default async function Home() {
               <section>
                 <div className="mb-6 flex items-center justify-between border-b-2 border-primary-container pb-2">
                   <h2 className="font-headline text-2xl font-bold uppercase tracking-tight">Technology</h2>
-                  <button className="flex items-center gap-1 text-xs font-bold text-primary hover:underline">
+                  <a
+                    href={`/category/${categoryToSlug(Category.Technology)}`}
+                    className="flex items-center gap-1 text-xs font-bold text-primary hover:underline"
+                  >
                     VIEW ALL <ChevronRight className="h-4 w-4" />
-                  </button>
+                  </a>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {(techArticles.length ? techArticles : TECH_ARTICLES).map(article => (

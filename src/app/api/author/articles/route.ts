@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import prisma from "../../../../lib/prisma";
 import { getAuthorFromCookie } from "../../../../lib/site-auth";
 
@@ -65,11 +66,15 @@ export async function POST(request: Request) {
         "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=1200&h=800&fit=crop",
       publishedAt,
       siteAuthorId: author.id,
-      views: Math.floor(Math.random() * 25000),
-      likesCount: Math.floor(Math.random() * 2500),
-      commentsCount: Math.floor(Math.random() * 150),
+      views: 0,
+      likesCount: 0,
+      commentsCount: 0,
     },
   });
+
+  revalidatePath("/");
+  revalidatePath("/author");
+  revalidatePath(`/article/${article.slug}`);
 
   return NextResponse.json({ article }, { status: 201 });
 }

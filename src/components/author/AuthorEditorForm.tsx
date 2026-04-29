@@ -130,6 +130,10 @@ export function AuthorEditorForm({ authorName }: { authorName: string }) {
                   <option>Published</option>
                 </select>
               </label>
+              <p className="text-xs leading-5 text-slate-500">
+                Only articles with status <span className="font-semibold text-slate-700">Published</span>
+                {" "}appear immediately in the news feed.
+              </p>
             </div>
           </div>
           <div className="rounded-lg border border-outline-variant bg-white p-4">

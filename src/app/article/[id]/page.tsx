@@ -1,10 +1,13 @@
+import { unstable_noStore as noStore } from "next/cache";
 import { notFound } from "next/navigation";
-import { ChevronRight, Share2, ThumbsUp, MessageSquare, Bookmark } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { TrendingList } from "../../../components/ui/TrendingList";
 import { Navbar } from "../../../components/layout/Navbar";
 import { Footer } from "../../../components/layout/Footer";
 import prisma from "../../../lib/prisma";
 import { hasConfiguredDatabase } from "../../../lib/env";
+import { getSiteUserFromCookie } from "../../../lib/site-auth";
+import { ArticleInteractions } from "../../../components/article/ArticleInteractions";
 
 function renderParagraphs(content: string) {
   return content.split(/\n\n+/).map((paragraph, index) => (
@@ -15,6 +18,8 @@ function renderParagraphs(content: string) {
 }
 
 export default async function ArticleDetail(props: { params: Promise<{ id: string }> }) {
+  noStore();
+
   const params = await props.params;
 
   if (!hasConfiguredDatabase()) {
@@ -30,9 +35,42 @@ export default async function ArticleDetail(props: { params: Promise<{ id: strin
     );
   }
 
+  const user = await getSiteUserFromCookie();
+
   const article = await prisma.article.findUnique({
     where: {
       slug: params.id,
+    },
+    include: {
+      likes: user
+        ? {
+            where: {
+              userId: user.id,
+            },
+            select: {
+              id: true,
+            },
+          }
+        : false,
+      comments: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      },
+      _count: {
+        select: {
+          likes: true,
+          comments: true,
+        },
+      },
     },
   });
 
@@ -97,13 +135,20 @@ export default async function ArticleDetail(props: { params: Promise<{ id: strin
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
             <div className="hidden lg:block lg:col-span-1">
-              <div className="sticky top-32 flex flex-col items-center gap-4">
-                {[Share2, ThumbsUp, MessageSquare, Bookmark].map((Icon, i) => (
-                  <button key={i} className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-container-low text-on-surface-variant hover:bg-primary hover:text-white transition-all shadow-sm">
-                    <Icon className="h-5 w-5" />
-                  </button>
-                ))}
-              </div>
+              <ArticleInteractions
+                articleId={article.id}
+                initialLikes={article._count.likes}
+                initialComments={article._count.comments}
+                initialViews={article.views + 1}
+                initialLiked={Array.isArray(article.likes) ? article.likes.length > 0 : false}
+                initialCommentList={article.comments.map((comment) => ({
+                  id: comment.id,
+                  authorName: comment.user.name,
+                  content: comment.content,
+                  createdAt: comment.createdAt.toISOString(),
+                }))}
+                isLoggedIn={Boolean(user)}
+              />
             </div>
 
             <article className="col-span-1 lg:col-span-7 space-y-8">
@@ -138,6 +183,23 @@ export default async function ArticleDetail(props: { params: Promise<{ id: strin
                   </div>
                 </div>
               </section>
+
+              <div className="lg:hidden">
+                <ArticleInteractions
+                  articleId={article.id}
+                  initialLikes={article._count.likes}
+                  initialComments={article._count.comments}
+                  initialViews={article.views + 1}
+                  initialLiked={Array.isArray(article.likes) ? article.likes.length > 0 : false}
+                  initialCommentList={article.comments.map((comment) => ({
+                    id: comment.id,
+                    authorName: comment.user.name,
+                    content: comment.content,
+                    createdAt: comment.createdAt.toISOString(),
+                  }))}
+                  isLoggedIn={Boolean(user)}
+                />
+              </div>
             </article>
 
             {/* Sidebar */}

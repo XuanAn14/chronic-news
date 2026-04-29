@@ -37,6 +37,8 @@ model SiteUser {
   updatedAt    DateTime      @updatedAt
   sessions     SiteSession[]
   articles     Article[]     @relation("SiteUserArticles")
+  articleLikes ArticleLike[]
+  comments     ArticleComment[]
 }
 
 model SiteSession {
@@ -68,6 +70,29 @@ model Article {
   authorId      String?
   siteAuthor    SiteUser?  @relation("SiteUserArticles", fields: [siteAuthorId], references: [id])
   siteAuthorId  String?
+  likes         ArticleLike[]
+  comments      ArticleComment[]
+}
+
+model ArticleLike {
+  id        String   @id @default(cuid())
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  articleId String
+  user      SiteUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  createdAt DateTime @default(now())
+
+  @@unique([articleId, userId])
+}
+
+model ArticleComment {
+  id        String   @id @default(cuid())
+  content   String
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  articleId String
+  user      SiteUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  createdAt DateTime @default(now())
 }
 
 enum SiteUserRole {

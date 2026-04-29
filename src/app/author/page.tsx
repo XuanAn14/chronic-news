@@ -1,3 +1,4 @@
+import { unstable_noStore as noStore } from "next/cache";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import prisma from "../../lib/prisma";
@@ -5,6 +6,8 @@ import { getAuthorFromCookie } from "../../lib/site-auth";
 import { AuthorShell } from "../../components/author/AuthorShell";
 
 export default async function AuthorPage() {
+  noStore();
+
   const author = await getAuthorFromCookie();
   if (!author) {
     redirect("/login");
@@ -14,17 +17,32 @@ export default async function AuthorPage() {
     where: {
       siteAuthorId: author.id,
     },
+    include: {
+      _count: {
+        select: {
+          likes: true,
+          comments: true,
+        },
+      },
+    },
     orderBy: {
-      createdAt: "desc",
+      updatedAt: "desc",
     },
   });
 
   const totalReads = articles.reduce((sum, article) => sum + article.views, 0);
-  const totalLikes = articles.reduce((sum, article) => sum + article.likesCount, 0);
-  const totalComments = articles.reduce((sum, article) => sum + article.commentsCount, 0);
-  const avgReadTime = articles.length
-    ? `${Math.max(2, Math.round(totalReads / Math.max(1, articles.length * 5000)) + 3)}m ${Math.round((totalLikes % 60) + 10)}s`
-    : "0m 00s";
+  const totalLikes = articles.reduce((sum, article) => sum + article._count.likes, 0);
+  const totalComments = articles.reduce((sum, article) => sum + article._count.comments, 0);
+  const totalWords = articles.reduce(
+    (sum, article) => sum + article.content.split(/\s+/).filter(Boolean).length,
+    0,
+  );
+  const avgReadMinutes = articles.length ? Math.max(1, Math.round(totalWords / articles.length / 220)) : 0;
+  const avgReadSeconds = articles.length
+    ? Math.round(((totalWords / Math.max(1, articles.length)) % 220) / 220 * 60)
+    : 0;
+  const avgReadTime = `${avgReadMinutes}m ${avgReadSeconds.toString().padStart(2, "0")}s`;
+  const topArticle = [...articles].sort((a, b) => b.views - a.views)[0];
 
   return (
     <AuthorShell
@@ -38,7 +56,9 @@ export default async function AuthorPage() {
             <span className="text-xs font-semibold uppercase tracking-wider text-tertiary">
               Total Reads
             </span>
-            <span className="text-xs font-bold text-green-600">+12%</span>
+            <span className="text-xs font-bold text-green-600">
+              {articles.length ? `${articles.filter((item) => item.status === "Published").length} live` : "0 live"}
+            </span>
           </div>
           <div className="text-3xl font-bold">{totalReads.toLocaleString()}</div>
         </div>
@@ -114,8 +134,8 @@ export default async function AuthorPage() {
                       <td className="px-4 py-4 text-right font-medium">{article.views.toLocaleString()}</td>
                       <td className="px-4 py-4 text-right">
                         <div className="flex justify-end gap-3 text-sm text-tertiary">
-                          <span>{article.commentsCount} comments</span>
-                          <span>{article.likesCount} likes</span>
+                          <span>{article._count.comments} comments</span>
+                          <span>{article._count.likes} likes</span>
                         </div>
                       </td>
                     </tr>
@@ -160,7 +180,7 @@ export default async function AuthorPage() {
               <div>
                 <p className="text-sm font-bold text-on-surface">Most viewed article</p>
                 <p className="mt-1 text-sm text-on-surface-variant">
-                  {articles[0]?.title ?? "No published article yet"}
+                  {topArticle?.title ?? "No published article yet"}
                 </p>
               </div>
               <div>
