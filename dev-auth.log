@@ -12,3 +12,35 @@
  ○ Compiling /api/auth/register ...
  ✓ Compiled /api/auth/register in 2.5s (307 modules)
  POST /api/auth/register 200 in 5356ms
+ ✓ Compiled /api/auth/login in 365ms (309 modules)
+ POST /api/auth/login 200 in 2073ms
+ ○ Compiling / ...
+ ✓ Compiled / in 2.2s (644 modules)
+ ✓ Compiled in 512ms (238 modules)
+ GET / 200 in 3592ms
+ ✓ Compiled /login in 335ms (643 modules)
+ GET /login 200 in 532ms
+ ✓ Compiled /api/auth/register in 138ms (432 modules)
+ POST /api/auth/register 200 in 1919ms
+ ○ Compiling /settings ...
+ ✓ Compiled /settings in 538ms (715 modules)
+ GET /settings 200 in 2765ms
+ GET /settings 200 in 3316ms
+ GET / 200 in 1867ms
+ ✓ Compiled /_not-found in 381ms (720 modules)
+ GET /category/world 404 in 474ms
+ GET /settings 200 in 1956ms
+ GET /category/world 404 in 153ms
+ GET / 200 in 2094ms
+ ✓ Compiled /article/[id] in 332ms (726 modules)
+ GET /article/gi-v-ng-gi-m-k-l-c 200 in 2922ms
+ GET /article/gi-v-ng-gi-m-k-l-c 200 in 1976ms
+ GET / 200 in 1958ms
+ ✓ Compiled /admin/login in 339ms (735 modules)
+ GET /admin/login 200 in 571ms
+ ✓ Compiled /api/admin/login in 307ms (737 modules)
+ POST /api/admin/login 401 in 1248ms
+ POST /api/admin/login 200 in 1487ms
+ ✓ Compiled /admin/dashboard in 449ms (762 modules)
+ GET /admin/dashboard 200 in 2305ms
+ GET /admin/dashboard 200 in 2003ms
