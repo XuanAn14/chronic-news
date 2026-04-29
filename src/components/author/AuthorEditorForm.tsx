@@ -1,13 +1,21 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { UploadCloud } from "lucide-react";
+import { Eye, RefreshCw, Save, UploadCloud, X } from "lucide-react";
 import { AuthorShell } from "./AuthorShell";
+import {
+  getSuggestedSlug,
+  suggestMetaDescription,
+  suggestMetaTitle,
+} from "../../lib/editor";
+
+const categories = ["Technology", "Politics", "Business", "Science", "Lifestyle", "Economy"];
 
 interface AuthorEditorInitialData {
   articleId?: string;
   title?: string;
+  slug?: string;
   excerpt?: string;
   content?: string;
   category?: string;
@@ -15,6 +23,145 @@ interface AuthorEditorInitialData {
   featuredImage?: string;
   metaTitle?: string;
   metaDescription?: string;
+}
+
+function PreviewModal({
+  open,
+  onClose,
+  title,
+  slug,
+  excerpt,
+  content,
+  featuredImage,
+  metaTitle,
+  metaDescription,
+  category,
+  authorName,
+}: {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  featuredImage: string;
+  metaTitle: string;
+  metaDescription: string;
+  category: string;
+  authorName: string;
+}) {
+  if (!open) {
+    return null;
+  }
+
+  const previewTitle = title || "Untitled draft";
+  const previewDescription =
+    metaDescription || excerpt || "Add a short summary to improve search preview.";
+  const previewImage =
+    featuredImage ||
+    "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=1200&h=800&fit=crop";
+  const paragraphs = content.split(/\n\n+/).filter(Boolean).slice(0, 4);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/60 p-4 lg:p-10">
+      <div className="w-full max-w-5xl rounded-2xl bg-slate-50 shadow-2xl">
+        <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
+              Preview before publish
+            </p>
+            <p className="mt-1 text-sm text-slate-600">Live draft rendering from current editor fields.</p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full border border-slate-200 p-2 text-slate-500 hover:bg-white"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="grid gap-6 p-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="space-y-6">
+            <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Search preview</p>
+              <p className="mt-3 truncate text-sm text-green-700">
+                chronicle.news/article/{slug || getSuggestedSlug(title)}
+              </p>
+              <p className="mt-1 truncate text-xl font-semibold text-blue-700">
+                {metaTitle || suggestMetaTitle(title) || previewTitle}
+              </p>
+              <p className="mt-1 text-sm leading-6 text-slate-600">{previewDescription}</p>
+            </div>
+
+            <article className="rounded-2xl border border-slate-200 bg-white p-6">
+              <div className="mb-6 flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
+                <span>{category}</span>
+                <span className="h-1 w-1 rounded-full bg-slate-300" />
+                <span>Draft Preview</span>
+              </div>
+              <h1 className="font-headline text-4xl font-bold leading-tight text-slate-950">
+                {previewTitle}
+              </h1>
+              <p className="mt-4 text-lg leading-8 text-slate-600">{excerpt || "Add an excerpt for the deck."}</p>
+
+              <div className="mt-8 overflow-hidden rounded-2xl border border-slate-200">
+                <img src={previewImage} alt={previewTitle} className="h-80 w-full object-cover" />
+              </div>
+
+              <div className="mt-8 flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-lg font-bold text-slate-700">
+                  {authorName.charAt(0)}
+                </div>
+                <div>
+                  <p className="font-semibold text-slate-900">{authorName}</p>
+                  <p className="text-sm text-slate-500">Preview mode</p>
+                </div>
+              </div>
+
+              <div className="mt-8 space-y-6">
+                {(paragraphs.length ? paragraphs : ["Start typing your story here..."]).map((paragraph, index) => (
+                  <p key={index} className="text-lg leading-8 text-slate-700">
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
+            </article>
+          </div>
+
+          <aside className="space-y-4">
+            <div className="rounded-xl border border-slate-200 bg-white p-4">
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Publishing URL</p>
+              <p className="mt-2 break-all text-sm font-medium text-slate-700">
+                /article/{slug || getSuggestedSlug(title)}
+              </p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-white p-4">
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">SEO payload</p>
+              <dl className="mt-3 space-y-3 text-sm text-slate-600">
+                <div>
+                  <dt className="font-semibold text-slate-900">Meta title</dt>
+                  <dd>{metaTitle || suggestMetaTitle(title) || "Missing"}</dd>
+                </div>
+                <div>
+                  <dt className="font-semibold text-slate-900">Meta description</dt>
+                  <dd>{previewDescription}</dd>
+                </div>
+              </dl>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-white p-4">
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Editorial checks</p>
+              <ul className="mt-3 space-y-2 text-sm text-slate-600">
+                <li>Slug is generated from the current title and can be edited manually.</li>
+                <li>Meta description falls back to excerpt or story body.</li>
+                <li>Only published posts appear in the main feed immediately.</li>
+              </ul>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function AuthorEditorForm({
@@ -25,6 +172,7 @@ export function AuthorEditorForm({
   initialData?: AuthorEditorInitialData;
 }) {
   const [title, setTitle] = useState(initialData?.title ?? "");
+  const [slug, setSlug] = useState(initialData?.slug ?? "");
   const [excerpt, setExcerpt] = useState(initialData?.excerpt ?? "");
   const [content, setContent] = useState(initialData?.content ?? "");
   const [category, setCategory] = useState(initialData?.category ?? "Technology");
@@ -35,6 +183,12 @@ export function AuthorEditorForm({
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [hasCustomSlug, setHasCustomSlug] = useState(Boolean(initialData?.slug));
+  const [hasCustomMetaTitle, setHasCustomMetaTitle] = useState(Boolean(initialData?.metaTitle));
+  const [hasCustomMetaDescription, setHasCustomMetaDescription] = useState(
+    Boolean(initialData?.metaDescription),
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
@@ -43,6 +197,24 @@ export function AuthorEditorForm({
     const trimmed = content.trim();
     return trimmed ? trimmed.split(/\s+/).length : 0;
   }, [content]);
+
+  useEffect(() => {
+    if (!hasCustomSlug) {
+      setSlug(getSuggestedSlug(title));
+    }
+  }, [title, hasCustomSlug]);
+
+  useEffect(() => {
+    if (!hasCustomMetaTitle) {
+      setMetaTitle(suggestMetaTitle(title));
+    }
+  }, [title, hasCustomMetaTitle]);
+
+  useEffect(() => {
+    if (!hasCustomMetaDescription) {
+      setMetaDescription(suggestMetaDescription(excerpt, content));
+    }
+  }, [excerpt, content, hasCustomMetaDescription]);
 
   async function handleImageUpload(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -113,6 +285,7 @@ export function AuthorEditorForm({
       },
       body: JSON.stringify({
         title,
+        slug,
         excerpt,
         content,
         category,
@@ -135,12 +308,38 @@ export function AuthorEditorForm({
     setError(body?.error || "Could not save article.");
   }
 
+  function resetSlugSuggestion() {
+    setHasCustomSlug(false);
+    setSlug(getSuggestedSlug(title));
+  }
+
+  function resetSeoSuggestion() {
+    setHasCustomMetaTitle(false);
+    setHasCustomMetaDescription(false);
+    setMetaTitle(suggestMetaTitle(title));
+    setMetaDescription(suggestMetaDescription(excerpt, content));
+  }
+
   return (
     <AuthorShell
       authorName={authorName}
       title={isEditing ? "Edit article" : "Create a new article"}
-      subtitle="Publish under your own byline and track engagement from the author studio."
+      subtitle="Publish under your own byline and review the article exactly as it will appear before it goes live."
     >
+      <PreviewModal
+        open={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        title={title}
+        slug={slug}
+        excerpt={excerpt}
+        content={content}
+        featuredImage={featuredImage}
+        metaTitle={metaTitle}
+        metaDescription={metaDescription}
+        category={category}
+        authorName={authorName}
+      />
+
       <div className="grid grid-cols-12 gap-4">
         <form onSubmit={handleSubmit} className="col-span-12 space-y-4 lg:col-span-8">
           <input
@@ -151,6 +350,37 @@ export function AuthorEditorForm({
             className="w-full rounded-lg border border-outline-variant bg-white px-4 py-4 font-headline text-3xl font-bold outline-none focus:border-primary"
             required
           />
+
+          <div className="rounded-lg border border-outline-variant bg-white p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Article slug</p>
+                <p className="mt-1 text-xs text-slate-500">Used for the public article URL and search sharing.</p>
+              </div>
+              <button
+                type="button"
+                onClick={resetSlugSuggestion}
+                className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                Auto-generate
+              </button>
+            </div>
+            <div className="mt-3 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-3">
+              <span className="hidden text-sm text-slate-500 sm:inline">chronicle.news/article/</span>
+              <input
+                type="text"
+                value={slug}
+                onChange={(event) => {
+                  setHasCustomSlug(true);
+                  setSlug(event.target.value);
+                }}
+                className="min-w-0 flex-1 bg-transparent text-sm font-medium text-slate-900 outline-none"
+                placeholder="story-url"
+              />
+            </div>
+          </div>
+
           <textarea
             value={excerpt}
             onChange={(event) => setExcerpt(event.target.value)}
@@ -196,9 +426,7 @@ export function AuthorEditorForm({
               <p className="font-headline text-lg font-semibold text-slate-700">
                 {isUploading ? "Uploading image..." : "Upload Cover Image"}
               </p>
-              <p className="mt-2 text-xs font-semibold">
-                Choose JPG or PNG from your computer
-              </p>
+              <p className="mt-2 text-xs font-semibold">Choose JPG or PNG from your computer</p>
             </button>
             {featuredImage ? (
               <img
@@ -211,13 +439,22 @@ export function AuthorEditorForm({
 
           {error ? <p className="text-sm text-red-500">{error}</p> : null}
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <button
               type="submit"
               disabled={isSubmitting || isUploading}
-              className="rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-white transition hover:bg-primary-container disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-white transition hover:bg-primary-container disabled:opacity-60"
             >
-              {isSubmitting ? "Saving..." : isEditing ? "Update article" : "Save article"}
+              <Save className="h-4 w-4" />
+              <span>{isSubmitting ? "Saving..." : isEditing ? "Update article" : "Save article"}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsPreviewOpen(true)}
+              className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              <Eye className="h-4 w-4" />
+              <span>Preview</span>
             </button>
             {isEditing ? (
               <button
@@ -242,11 +479,9 @@ export function AuthorEditorForm({
                   onChange={(event) => setCategory(event.target.value)}
                   className="mt-2 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2"
                 >
-                  {["Technology", "Politics", "Business", "Science", "Lifestyle", "Economy"].map(
-                    (item) => (
-                      <option key={item}>{item}</option>
-                    ),
-                  )}
+                  {categories.map((item) => (
+                    <option key={item}>{item}</option>
+                  ))}
                 </select>
               </label>
               <div className="flex flex-wrap gap-2">
@@ -263,14 +498,27 @@ export function AuthorEditorForm({
           </div>
 
           <div className="rounded-lg border border-outline-variant bg-white p-4">
-            <h3 className="font-headline text-lg font-semibold">SEO Settings</h3>
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="font-headline text-lg font-semibold">SEO Settings</h3>
+              <button
+                type="button"
+                onClick={resetSeoSuggestion}
+                className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                Suggest
+              </button>
+            </div>
             <div className="mt-4 space-y-3">
               <div className="space-y-1">
                 <label className="text-[10px] font-bold uppercase text-slate-500">Meta Title</label>
                 <input
                   type="text"
                   value={metaTitle}
-                  onChange={(event) => setMetaTitle(event.target.value)}
+                  onChange={(event) => {
+                    setHasCustomMetaTitle(true);
+                    setMetaTitle(event.target.value);
+                  }}
                   className="w-full rounded border border-slate-200 p-2 text-sm"
                 />
                 <p className="text-right text-[10px] text-slate-400">{metaTitle.length}/60 chars</p>
@@ -282,7 +530,10 @@ export function AuthorEditorForm({
                 <textarea
                   rows={3}
                   value={metaDescription}
-                  onChange={(event) => setMetaDescription(event.target.value)}
+                  onChange={(event) => {
+                    setHasCustomMetaDescription(true);
+                    setMetaDescription(event.target.value);
+                  }}
                   className="w-full rounded border border-slate-200 p-2 text-sm"
                 />
                 <p className="text-right text-[10px] text-slate-400">
@@ -293,10 +544,12 @@ export function AuthorEditorForm({
             <div className="mt-3 rounded border border-blue-100 bg-blue-50 p-3 text-xs text-blue-800">
               <p className="mb-1 font-bold">Google Preview:</p>
               <p className="truncate font-medium text-blue-600">
-                {metaTitle || title || "New article draft"} - Chronicle
+                {metaTitle || suggestMetaTitle(title) || "New article draft"} - Chronicle
               </p>
               <p className="mt-1 line-clamp-2 text-slate-500">
-                {metaDescription || excerpt || "Describe how this article should appear in search results."}
+                {metaDescription ||
+                  suggestMetaDescription(excerpt, content) ||
+                  "Describe how this article should appear in search results."}
               </p>
             </div>
           </div>
@@ -321,6 +574,14 @@ export function AuthorEditorForm({
                   <option>Published</option>
                 </select>
               </label>
+              <button
+                type="button"
+                onClick={() => setIsPreviewOpen(true)}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                <Eye className="h-4 w-4" />
+                Open publish preview
+              </button>
               <p className="text-xs leading-5 text-slate-500">
                 Only articles with status <span className="font-semibold text-slate-700">Published</span>{" "}
                 appear immediately in the news feed.

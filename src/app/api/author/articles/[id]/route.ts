@@ -2,17 +2,10 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import prisma from "../../../../../lib/prisma";
 import { getAuthorFromCookie } from "../../../../../lib/site-auth";
+import { slugify } from "../../../../../lib/editor";
 
-function slugify(value: string) {
-  return value
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "")
-    .slice(0, 200);
-}
-
-async function generateUniqueSlug(title: string, articleId: string) {
-  const baseSlug = slugify(title) || "article";
+async function generateUniqueSlug(preferredSlug: string, fallbackTitle: string, articleId: string) {
+  const baseSlug = slugify(preferredSlug) || slugify(fallbackTitle) || "article";
   let slug = baseSlug;
   let suffix = 1;
 
@@ -50,6 +43,7 @@ export async function PATCH(
   const content = body?.content?.toString().trim();
   const metaTitle = body?.metaTitle?.toString().trim() || "";
   const metaDescription = body?.metaDescription?.toString().trim() || "";
+  const requestedSlug = body?.slug?.toString().trim() || "";
   const category = body?.category?.toString().trim() || "Technology";
   const status = body?.status?.toString().trim() || "Draft";
   const featuredImage = body?.featuredImage?.toString().trim() || "";
@@ -61,7 +55,7 @@ export async function PATCH(
     );
   }
 
-  const slug = await generateUniqueSlug(title, existing.id);
+  const slug = await generateUniqueSlug(requestedSlug, title, existing.id);
   const publishedAt =
     status === "Published"
       ? existing.publishedAt ?? new Date()

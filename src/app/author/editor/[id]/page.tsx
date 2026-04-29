@@ -29,6 +29,7 @@ export default async function AuthorEditPage(props: {
       initialData={{
         articleId: article.id,
         title: article.title,
+        slug: article.slug,
         excerpt: article.excerpt,
         content: article.content,
         category: article.category,
