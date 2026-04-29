@@ -1,10 +1,19 @@
-import React from "react";
 import Link from "next/link";
 import { TrendingUp } from "lucide-react";
 import { TRENDING_ARTICLES } from "../../constants";
 import { cn } from "../../lib/utils";
+import { getTrendingArticlesCached } from "../../lib/content-cache";
 
-export const TrendingList = ({ className }: { className?: string }) => {
+export const TrendingList = async ({ className }: { className?: string }) => {
+  const cachedTrending = await getTrendingArticlesCached(3);
+  const trendingArticles = cachedTrending.length
+    ? cachedTrending.map((article) => ({
+        id: article.slug,
+        title: article.title,
+        views: article.views?.toLocaleString() ?? "0",
+      }))
+    : TRENDING_ARTICLES;
+
   return (
     <aside className={cn("space-y-12", className)}>
       <div className="border border-outline-variant bg-surface-container-lowest p-6 rounded-xl">
@@ -13,7 +22,7 @@ export const TrendingList = ({ className }: { className?: string }) => {
           Trending Now
         </h2>
         <ul className="space-y-6">
-          {TRENDING_ARTICLES.map((article, index) => (
+          {trendingArticles.map((article, index) => (
             <li key={article.id} className="group border-t border-outline-variant first:border-t-0 pt-6 first:pt-0">
               <Link href={`/article/${article.id}`} className="flex items-start gap-4">
                 <span className="font-headline text-3xl italic text-surface-container-highest group-hover:text-secondary transition-colors">

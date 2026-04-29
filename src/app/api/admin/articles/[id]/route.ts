@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { revalidatePath, revalidateTag } from "next/cache";
 import prisma from "../../../../../lib/prisma";
-import { getAuthorFromCookie } from "../../../../../lib/site-auth";
+import { getAdminFromCookie } from "../../../../../lib/auth";
 import { slugify } from "../../../../../lib/editor";
 
 async function generateUniqueSlug(preferredSlug: string, fallbackTitle: string, articleId: string) {
@@ -23,15 +23,13 @@ export async function PATCH(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
-  const author = await getAuthorFromCookie();
-  if (!author) {
+  const admin = await getAdminFromCookie();
+  if (!admin) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
   const { id } = await context.params;
-  const existing = await prisma.article.findFirst({
-    where: { id, siteAuthorId: author.id },
-  });
+  const existing = await prisma.article.findUnique({ where: { id } });
 
   if (!existing) {
     return NextResponse.json({ error: "Article not found." }, { status: 404 });
@@ -44,8 +42,8 @@ export async function PATCH(
   const metaTitle = body?.metaTitle?.toString().trim() || "";
   const metaDescription = body?.metaDescription?.toString().trim() || "";
   const requestedSlug = body?.slug?.toString().trim() || "";
-  const category = body?.category?.toString().trim() || "Technology";
-  const status = body?.status?.toString().trim() || "Draft";
+  const category = body?.category?.toString().trim() || existing.category;
+  const status = body?.status?.toString().trim() || existing.status;
   const featuredImage = body?.featuredImage?.toString().trim() || "";
 
   if (!title || !excerpt || !content) {
@@ -55,11 +53,12 @@ export async function PATCH(
     );
   }
 
+  if (!["Draft", "Published"].includes(status)) {
+    return NextResponse.json({ error: "Invalid article status." }, { status: 400 });
+  }
+
   const slug = await generateUniqueSlug(requestedSlug, title, existing.id);
-  const publishedAt =
-    status === "Published"
-      ? existing.publishedAt ?? new Date()
-      : null;
+  const publishedAt = status === "Published" ? existing.publishedAt ?? new Date() : null;
 
   const article = await prisma.article.update({
     where: { id: existing.id },
@@ -80,10 +79,10 @@ export async function PATCH(
   });
 
   revalidatePath("/");
-  revalidatePath("/author");
   revalidatePath("/admin/dashboard");
   revalidatePath("/admin/comments");
   revalidatePath("/admin/analytics");
+  revalidatePath("/admin/categories");
   revalidatePath(`/article/${existing.slug}`);
   revalidatePath(`/article/${article.slug}`);
   revalidateTag("articles");
@@ -95,27 +94,25 @@ export async function DELETE(
   _request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
-  const author = await getAuthorFromCookie();
-  if (!author) {
+  const admin = await getAdminFromCookie();
+  if (!admin) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
   const { id } = await context.params;
-  const article = await prisma.article.findFirst({
-    where: { id, siteAuthorId: author.id },
-  });
+  const article = await prisma.article.findUnique({ where: { id } });
 
   if (!article) {
     return NextResponse.json({ error: "Article not found." }, { status: 404 });
   }
 
-  await prisma.article.delete({ where: { id: article.id } });
+  await prisma.article.delete({ where: { id } });
 
   revalidatePath("/");
-  revalidatePath("/author");
   revalidatePath("/admin/dashboard");
   revalidatePath("/admin/comments");
   revalidatePath("/admin/analytics");
+  revalidatePath("/admin/categories");
   revalidatePath(`/article/${article.slug}`);
   revalidateTag("articles");
 

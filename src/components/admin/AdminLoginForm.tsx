@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export function AdminLoginForm() {
-  const [email, setEmail] = useState("admin@chronic.news");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -67,7 +67,7 @@ export function AdminLoginForm() {
             </p>
             <h2 className="mt-4 font-headline text-3xl font-bold text-slate-900">Welcome back</h2>
             <p className="mt-2 text-sm text-slate-500">
-              Use your admin account to access the CMS interface from `code.html`.
+              Admin sessions are not persisted. Closing the browser will require signing in again.
             </p>
           </div>
 
@@ -76,6 +76,7 @@ export function AdminLoginForm() {
               Email
               <input
                 type="email"
+                autoComplete="off"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
@@ -86,6 +87,7 @@ export function AdminLoginForm() {
               Password
               <input
                 type="password"
+                autoComplete="new-password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"

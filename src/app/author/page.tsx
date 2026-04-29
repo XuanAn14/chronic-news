@@ -1,4 +1,5 @@
 import { unstable_noStore as noStore } from "next/cache";
+import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import prisma from "../../lib/prisma";
@@ -114,9 +115,12 @@ export default async function AuthorPage() {
                     <tr key={article.id} className="transition-colors hover:bg-surface-container-low">
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-3">
-                          <img
+                          <Image
                             src={article.featuredImage ?? "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=1200&h=800&fit=crop"}
                             alt={article.title}
+                            width={64}
+                            height={40}
+                            unoptimized
                             className="h-10 w-16 rounded object-cover"
                           />
                           <span className="line-clamp-1 font-medium text-on-surface">{article.title}</span>

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { AuthorEditorForm } from "../../../components/author/AuthorEditorForm";
 import { getAuthorFromCookie } from "../../../lib/site-auth";
+import { getCategoryOptions } from "../../../lib/categories";
 
 export default async function AuthorEditorPage() {
   const author = await getAuthorFromCookie();
@@ -8,5 +9,7 @@ export default async function AuthorEditorPage() {
     redirect("/login");
   }
 
-  return <AuthorEditorForm authorName={author.name} />;
+  const categories = await getCategoryOptions();
+
+  return <AuthorEditorForm authorName={author.name} categories={categories} />;
 }

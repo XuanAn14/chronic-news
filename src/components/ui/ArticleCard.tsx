@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Bookmark } from "lucide-react";
 import { type Article } from "../../types";
 import { cn } from "../../lib/utils";
@@ -20,10 +21,14 @@ export const ArticleCard = ({
       <article className={cn("group flex gap-4", className)}>
         <div className="h-20 w-20 flex-shrink-0 overflow-hidden bg-surface-container">
           {article.image && (
-            <img
+            <Image
               src={article.image}
               alt={article.title}
+              width={80}
+              height={80}
+              unoptimized
               className="h-full w-full object-cover transition-transform group-hover:scale-105"
+              sizes="80px"
             />
           )}
         </div>
@@ -50,11 +55,14 @@ export const ArticleCard = ({
           className,
         )}
       >
-        <div className="h-40 w-full flex-shrink-0 overflow-hidden rounded-lg bg-surface-container sm:h-32 sm:w-32">
-          <img
+        <div className="relative h-40 w-full flex-shrink-0 overflow-hidden rounded-lg bg-surface-container sm:h-32 sm:w-32">
+          <Image
             src={article.image}
             alt={article.title}
+            fill
+            unoptimized
             className="h-full w-full object-cover transition-transform group-hover:scale-105"
+            sizes="(max-width: 640px) 100vw, 128px"
           />
         </div>
         <div className="flex min-w-0 flex-1 flex-col justify-between">
@@ -85,10 +93,13 @@ export const ArticleCard = ({
   if (variant === "featured") {
     return (
       <article className={cn("group relative aspect-[16/9] w-full overflow-hidden", className)}>
-        <img
+        <Image
           src={article.image}
           alt={article.title}
+          fill
+          unoptimized
           className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+          sizes="(max-width: 1024px) 100vw, 960px"
         />
         <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/90 via-black/20 to-transparent p-5 sm:p-8">
           <span className="mb-3 w-fit bg-primary px-3 py-1 text-xs font-bold uppercase text-white">
@@ -116,11 +127,14 @@ export const ArticleCard = ({
 
   return (
     <article className={cn("group border border-outline-variant p-4 transition-all hover:shadow-sm", className)}>
-      <div className="mb-4 aspect-video overflow-hidden bg-surface-container">
-        <img
+      <div className="relative mb-4 aspect-video overflow-hidden bg-surface-container">
+        <Image
           src={article.image}
           alt={article.title}
+          fill
+          unoptimized
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          sizes="(max-width: 768px) 100vw, 400px"
         />
       </div>
       <span className="mb-2 block text-xs font-semibold uppercase tracking-widest text-primary">

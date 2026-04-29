@@ -1,6 +1,6 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
-import { unstable_noStore as noStore } from "next/cache";
 import { ArrowRight, ChevronRight, Mail, Search } from "lucide-react";
 import prisma from "../../../lib/prisma";
 import { hasConfiguredDatabase } from "../../../lib/env";
@@ -10,12 +10,12 @@ import { Navbar } from "../../../components/layout/Navbar";
 import { Footer } from "../../../components/layout/Footer";
 import { Category } from "../../../types";
 
+export const revalidate = 60;
+
 export default async function CategoryPage(props: {
   params: Promise<{ slug: string }>;
   searchParams?: Promise<{ q?: string; sort?: string }>;
 }) {
-  noStore();
-
   const params = await props.params;
   const searchParams = props.searchParams ? await props.searchParams : {};
   const category = slugToCategory(params.slug);
@@ -102,10 +102,13 @@ export default async function CategoryPage(props: {
             <section className="group overflow-hidden border border-outline-variant bg-white shadow-sm transition-all hover:shadow-md">
               <div className="grid grid-cols-1 md:grid-cols-2">
                 <div className="relative h-[300px] overflow-hidden md:h-[480px]">
-                  <img
+                  <Image
                     src={hero.featuredImage || "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=1200&h=800&fit=crop"}
                     alt={hero.title}
+                    fill
+                    unoptimized
                     className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    sizes="(max-width: 768px) 100vw, 50vw"
                   />
                   <div className="absolute left-4 top-4">
                     <span className="rounded-sm bg-primary-container px-3 py-1 text-xs font-semibold uppercase tracking-widest text-on-primary-container">
@@ -152,11 +155,14 @@ export default async function CategoryPage(props: {
                     key={article.id}
                     className="border border-outline-variant bg-white transition-all hover:border-primary"
                   >
-                    <div className="h-48 overflow-hidden">
-                      <img
+                    <div className="relative h-48 overflow-hidden">
+                      <Image
                         src={mapped.image}
                         alt={article.title}
+                        fill
+                        unoptimized
                         className="h-full w-full object-cover"
+                        sizes="(max-width: 768px) 100vw, 33vw"
                       />
                     </div>
                     <div className="p-4">

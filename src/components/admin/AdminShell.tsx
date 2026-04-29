@@ -28,11 +28,19 @@ interface AdminShellProps {
   rightPanel?: ReactNode;
 }
 
-const navItems = [
+interface AdminNavItem {
+  label: string;
+  href: string;
+  icon: typeof FileText;
+  disabled?: boolean;
+}
+
+const navItems: AdminNavItem[] = [
   { label: "Posts", href: "/admin/dashboard", icon: FileText },
   { label: "Editor", href: "/admin/editor", icon: LayoutDashboard },
-  { label: "Comments", href: "#", icon: MessageSquare, disabled: true },
-  { label: "Analytics", href: "#", icon: BarChart3, disabled: true },
+  { label: "Comments", href: "/admin/comments", icon: MessageSquare },
+  { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
+  { label: "Categories", href: "/admin/categories", icon: Settings },
   { label: "User Management", href: "/admin/users", icon: Users },
 ];
 

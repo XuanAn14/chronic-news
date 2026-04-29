@@ -50,6 +50,7 @@ export function ArticleInteractions({
 }: ArticleInteractionsProps) {
   const [likes, setLikes] = useState(initialLikes);
   const [comments, setComments] = useState(initialComments);
+  const [views, setViews] = useState(initialViews);
   const [liked, setLiked] = useState(initialLiked);
   const [saved, setSaved] = useState(initialSaved);
   const [shared, setShared] = useState(false);
@@ -96,10 +97,61 @@ export function ArticleInteractions({
   useEffect(() => {
     setLikes(initialLikes);
     setComments(initialComments);
+    setViews(initialViews);
     setLiked(initialLiked);
     setSaved(initialSaved);
     setCommentList(initialCommentList);
-  }, [initialLikes, initialComments, initialLiked, initialSaved, initialCommentList]);
+  }, [initialLikes, initialComments, initialLiked, initialSaved, initialCommentList, initialViews]);
+
+  useEffect(() => {
+    const sessionKey = `chronicle:viewed:${articleId}`;
+
+    if (typeof window === "undefined" || sessionStorage.getItem(sessionKey)) {
+      return;
+    }
+
+    sessionStorage.setItem(sessionKey, "1");
+
+    const run = async () => {
+      try {
+        const response = await fetch(`/api/articles/${articleId}/view`, {
+          method: "POST",
+          keepalive: true,
+        });
+
+        if (!response.ok) {
+          return;
+        }
+
+        const body = await response.json();
+        if (typeof body?.viewsCount === "number") {
+          setViews(body.viewsCount);
+        } else {
+          setViews((current) => current + 1);
+        }
+      } catch {
+        setViews((current) => current + 1);
+      }
+    };
+
+    if ("requestIdleCallback" in globalThis) {
+      const idleId = globalThis.requestIdleCallback(() => {
+        void run();
+      });
+
+      return () => {
+        globalThis.cancelIdleCallback(idleId);
+      };
+    }
+
+    const timeoutId = globalThis.setTimeout(() => {
+      void run();
+    }, 250);
+
+    return () => {
+      globalThis.clearTimeout(timeoutId);
+    };
+  }, [articleId]);
 
   async function handleLike() {
     if (!isLoggedIn) {
@@ -202,7 +254,7 @@ export function ArticleInteractions({
       <div className="rounded-2xl border border-outline-variant bg-white p-4 shadow-sm sm:p-6">
         <div className="grid grid-cols-1 gap-4 border-b border-outline-variant pb-4 text-center sm:grid-cols-3">
           <div>
-            <p className="text-2xl font-bold text-on-surface">{initialViews.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-on-surface">{views.toLocaleString()}</p>
             <p className="text-xs font-semibold uppercase tracking-widest text-on-surface-variant">
               Views
             </p>

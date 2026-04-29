@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import prisma from "../../../../lib/prisma";
 import { getAdminFromCookie } from "../../../../lib/auth";
 import { slugify } from "../../../../lib/editor";
@@ -69,7 +69,11 @@ export async function POST(request: Request) {
 
   revalidatePath("/");
   revalidatePath("/admin/dashboard");
+  revalidatePath("/admin/comments");
+  revalidatePath("/admin/analytics");
+  revalidatePath("/admin/categories");
   revalidatePath(`/article/${article.slug}`);
+  revalidateTag("articles");
 
   return NextResponse.json({ article }, { status: 201 });
 }

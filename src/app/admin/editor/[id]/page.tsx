@@ -1,23 +1,20 @@
-import { redirect, notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import prisma from "../../../../lib/prisma";
-import { getAuthorFromCookie } from "../../../../lib/site-auth";
-import { AuthorEditorForm } from "../../../../components/author/AuthorEditorForm";
+import { getAdminFromCookie } from "../../../../lib/auth";
+import { AdminEditorForm } from "../../../../components/admin/AdminEditorForm";
 import { getCategoryOptions } from "../../../../lib/categories";
 
-export default async function AuthorEditPage(props: {
+export default async function AdminEditPage(props: {
   params: Promise<{ id: string }>;
 }) {
-  const author = await getAuthorFromCookie();
-  if (!author) {
-    redirect("/login");
+  const admin = await getAdminFromCookie();
+  if (!admin) {
+    redirect("/admin/login");
   }
 
   const params = await props.params;
-  const article = await prisma.article.findFirst({
-    where: {
-      id: params.id,
-      siteAuthorId: author.id,
-    },
+  const article = await prisma.article.findUnique({
+    where: { id: params.id },
   });
 
   if (!article) {
@@ -27,8 +24,7 @@ export default async function AuthorEditPage(props: {
   const categories = await getCategoryOptions();
 
   return (
-    <AuthorEditorForm
-      authorName={author.name}
+    <AdminEditorForm
       categories={categories}
       initialData={{
         articleId: article.id,

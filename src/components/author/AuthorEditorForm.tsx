@@ -4,13 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, RefreshCw, Save, UploadCloud, X } from "lucide-react";
 import { AuthorShell } from "./AuthorShell";
-import {
-  getSuggestedSlug,
-  suggestMetaDescription,
-  suggestMetaTitle,
-} from "../../lib/editor";
-
-const categories = ["Technology", "Politics", "Business", "Science", "Lifestyle", "Economy"];
+import { getSuggestedSlug, suggestMetaDescription, suggestMetaTitle } from "../../lib/editor";
 
 interface AuthorEditorInitialData {
   articleId?: string;
@@ -166,9 +160,11 @@ function PreviewModal({
 
 export function AuthorEditorForm({
   authorName,
+  categories,
   initialData,
 }: {
   authorName: string;
+  categories: string[];
   initialData?: AuthorEditorInitialData;
 }) {
   const [title, setTitle] = useState(initialData?.title ?? "");
@@ -238,11 +234,17 @@ export function AuthorEditorForm({
     if (!response.ok) {
       const body = await response.json().catch(() => ({}));
       setError(body?.error || "Could not upload image.");
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
       return;
     }
 
     const body = await response.json();
     setFeaturedImage(body.url);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   }
 
   async function handleDelete() {
@@ -413,7 +415,7 @@ export function AuthorEditorForm({
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept=".jpg,.jpeg,.png,.webp,.gif,.avif,image/*"
               onChange={handleImageUpload}
               className="hidden"
             />
@@ -426,14 +428,18 @@ export function AuthorEditorForm({
               <p className="font-headline text-lg font-semibold text-slate-700">
                 {isUploading ? "Uploading image..." : "Upload Cover Image"}
               </p>
-              <p className="mt-2 text-xs font-semibold">Choose JPG or PNG from your computer</p>
+              <p className="mt-2 text-xs font-semibold">
+                Choose JPG, PNG, WEBP, GIF, or AVIF from your computer
+              </p>
             </button>
             {featuredImage ? (
-              <img
-                src={featuredImage}
-                alt="Cover preview"
-                className="h-48 w-full rounded-lg border border-outline-variant object-cover"
-              />
+              <div className="flex h-64 items-center justify-center rounded-lg border border-outline-variant bg-slate-50 p-3">
+                <img
+                  src={featuredImage}
+                  alt="Cover preview"
+                  className="h-full w-full rounded object-contain"
+                />
+              </div>
             ) : null}
           </div>
 

@@ -4,9 +4,28 @@ const { PrismaClient } = require("@prisma/client");
 const crypto = require("crypto");
 
 const prisma = new PrismaClient();
+const defaultCategories = [
+  "World",
+  "Politics",
+  "Technology",
+  "Lifestyle",
+  "Business",
+  "Science",
+  "Economy",
+  "Cybersecurity",
+  "Markets",
+];
 
 function hashPassword(password) {
   return crypto.createHash("sha256").update(password).digest("hex");
+}
+
+function slugify(value) {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 async function main() {
@@ -43,6 +62,19 @@ async function main() {
       role: "AUTHOR",
     },
   });
+
+  for (const categoryName of defaultCategories) {
+    await prisma.category.upsert({
+      where: { slug: slugify(categoryName) },
+      update: {
+        name: categoryName,
+      },
+      create: {
+        name: categoryName,
+        slug: slugify(categoryName),
+      },
+    });
+  }
 
   const sampleArticles = [
     {

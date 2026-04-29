@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { unstable_noStore as noStore } from "next/cache";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { ChevronRight } from "lucide-react";
 import { TrendingList } from "../../../components/ui/TrendingList";
 import { Navbar } from "../../../components/layout/Navbar";
@@ -12,6 +12,7 @@ import { getSiteUserFromCookie } from "../../../lib/site-auth";
 import { ArticleInteractions } from "../../../components/article/ArticleInteractions";
 import { mapDbArticle } from "../../../lib/articles";
 import { ArticleCard } from "../../../components/ui/ArticleCard";
+import { getRelatedArticlesCached } from "../../../lib/content-cache";
 
 export async function generateMetadata(props: {
   params: Promise<{ id: string }>;
@@ -51,8 +52,6 @@ function renderParagraphs(content: string) {
 }
 
 export default async function ArticleDetail(props: { params: Promise<{ id: string }> }) {
-  noStore();
-
   const params = await props.params;
 
   if (!hasConfiguredDatabase()) {
@@ -121,64 +120,7 @@ export default async function ArticleDetail(props: { params: Promise<{ id: strin
     return notFound();
   }
 
-  let relatedArticles = await prisma.article.findMany({
-    where: {
-      status: "Published",
-      id: {
-        not: article.id,
-      },
-      category: article.category,
-    },
-    orderBy: [{ publishedAt: "desc" }, { views: "desc" }],
-    take: 3,
-    select: {
-      slug: true,
-      title: true,
-      category: true,
-      author: true,
-      publishedAt: true,
-      featuredImage: true,
-      excerpt: true,
-      views: true,
-    },
-  });
-
-  if (relatedArticles.length < 3) {
-    const fallbackArticles = await prisma.article.findMany({
-      where: {
-        status: "Published",
-        id: {
-          not: article.id,
-        },
-        slug: {
-          notIn: relatedArticles.map((item) => item.slug),
-        },
-      },
-      orderBy: [{ views: "desc" }, { publishedAt: "desc" }],
-      take: 3 - relatedArticles.length,
-      select: {
-        slug: true,
-        title: true,
-        category: true,
-        author: true,
-        publishedAt: true,
-        featuredImage: true,
-        excerpt: true,
-        views: true,
-      },
-    });
-
-    relatedArticles = [...relatedArticles, ...fallbackArticles];
-  }
-
-  await prisma.article.update({
-    where: { id: article.id },
-    data: {
-      views: {
-        increment: 1,
-      },
-    },
-  });
+  const relatedArticles = await getRelatedArticlesCached(article.id, article.category, 3);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -219,13 +161,18 @@ export default async function ArticleDetail(props: { params: Promise<{ id: strin
               </div>
             </div>
             <div className="aspect-[21/9] overflow-hidden rounded-2xl border border-outline-variant shadow-2xl">
-              <img
+              <Image
                 src={
                   article.featuredImage ??
                   "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=1200&h=800&fit=crop"
                 }
                 alt={article.title}
+                width={1200}
+                height={630}
+                priority
+                unoptimized
                 className="h-full w-full object-cover"
+                sizes="(max-width: 1024px) 100vw, 1200px"
               />
             </div>
           </header>

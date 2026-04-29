@@ -1,4 +1,5 @@
-import { unstable_noStore as noStore } from "next/cache";
+import Link from "next/link";
+import Image from "next/image";
 import { ChevronRight } from "lucide-react";
 import { FEATURED_ARTICLE, TECH_ARTICLES } from "../constants";
 import { ArticleCard } from "../components/ui/ArticleCard";
@@ -11,11 +12,11 @@ import { hasConfiguredDatabase } from "../lib/env";
 import { Category, type Article } from "../types";
 import { categoryToSlug, mapDbArticle, normalizeCategory } from "../lib/articles";
 
+export const revalidate = 60;
+
 export default async function Home(props: {
   searchParams?: Promise<{ q?: string; category?: string; sort?: string }>;
 }) {
-  noStore();
-
   const searchParams = props.searchParams ? await props.searchParams : {};
   const query = searchParams?.q?.trim() || "";
   const selectedCategory = searchParams?.category?.trim() || "";
@@ -106,12 +107,12 @@ export default async function Home(props: {
                   <h2 className="font-headline text-2xl font-bold uppercase tracking-tight">
                     {sectionCategory}
                   </h2>
-                  <a
+                  <Link
                     href={`/category/${categoryToSlug(sectionCategory)}`}
                     className="flex items-center gap-1 text-xs font-bold text-primary hover:underline"
                   >
                     VIEW ALL <ChevronRight className="h-4 w-4" />
-                  </a>
+                  </Link>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {(sectionArticles.length ? sectionArticles : TECH_ARTICLES).map(article => (
@@ -130,9 +131,9 @@ export default async function Home(props: {
                       {(latestArticles.length ? latestArticles : articles.slice(0, 3)).map((article) => (
                         <article key={article.id} className="flex justify-between items-start border-b border-surface-container pb-4 last:border-0 group">
                           <div className="flex-1">
-                            <a href={`/article/${article.slug}`} className="font-headline text-sm font-bold leading-tight group-hover:text-secondary transition-colors cursor-pointer">
+                            <Link href={`/article/${article.slug}`} className="font-headline text-sm font-bold leading-tight transition-colors group-hover:text-secondary">
                               {article.title}
-                            </a>
+                            </Link>
                             <span className="text-[10px] text-on-surface-variant font-bold mt-1 block uppercase tracking-wider">
                               {article.publishedAt
                                 ? new Date(article.publishedAt).toLocaleDateString("en-US", {
@@ -155,9 +156,9 @@ export default async function Home(props: {
                       {(popularArticles.length ? popularArticles : articles.slice(0, 3)).map((article) => (
                         <article key={article.id} className="flex justify-between items-start border-b border-surface-container pb-4 last:border-0 group">
                           <div className="flex-1">
-                            <a href={`/article/${article.slug}`} className="font-headline text-sm font-bold leading-tight group-hover:text-secondary transition-colors cursor-pointer">
+                            <Link href={`/article/${article.slug}`} className="font-headline text-sm font-bold leading-tight transition-colors group-hover:text-secondary">
                               {article.title}
-                            </a>
+                            </Link>
                             <span className="text-[10px] text-on-surface-variant font-bold mt-1 block uppercase tracking-wider">
                               {article.views.toLocaleString()} reads
                             </span>
@@ -171,10 +172,13 @@ export default async function Home(props: {
               {/* Bento Visual Section */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="md:col-span-2 relative h-72 rounded-xl overflow-hidden group">
-                  <img
+                  <Image
                     src="https://images.unsplash.com/photo-1579154235884-332324962137?w=1000&h=600&fit=crop"
-                    className="h-full w-full object-cover transition-transform group-hover:scale-105"
                     alt="Science"
+                    fill
+                    unoptimized
+                    className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                    sizes="(max-width: 768px) 100vw, 66vw"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent p-8 flex flex-col justify-end">
                     <span className="mb-2 w-fit bg-white/20 backdrop-blur-md px-2 py-1 text-[10px] font-bold text-white uppercase rounded">Science</span>

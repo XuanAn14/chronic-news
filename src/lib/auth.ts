@@ -24,7 +24,13 @@ export async function verifyAdminCredentials(email: string, password: string) {
 
 export async function createAdminSession(adminId: string) {
   const token = crypto.randomUUID();
-  const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7);
+  const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 8);
+
+  await prisma.adminSession.deleteMany({
+    where: {
+      adminId,
+    },
+  });
 
   await prisma.adminSession.create({
     data: {
@@ -67,7 +73,6 @@ export function setAdminSessionCookie(response: NextResponse, token: string) {
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: 60 * 60 * 24 * 7,
   });
 }
 

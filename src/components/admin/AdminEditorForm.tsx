@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Bold,
@@ -23,7 +23,18 @@ import {
   suggestMetaTitle,
 } from "../../lib/editor";
 
-const categories = ["Politics", "Technology", "Economy", "Culture", "Business", "Science"];
+interface AdminEditorInitialData {
+  articleId?: string;
+  title?: string;
+  slug?: string;
+  excerpt?: string;
+  content?: string;
+  category?: string;
+  status?: string;
+  featuredImage?: string;
+  metaTitle?: string;
+  metaDescription?: string;
+}
 
 function PreviewModal({
   open,
@@ -140,24 +151,32 @@ function PreviewModal({
   );
 }
 
-export function AdminEditorForm() {
-  const [title, setTitle] = useState("");
-  const [slug, setSlug] = useState("");
-  const [excerpt, setExcerpt] = useState("");
-  const [content, setContent] = useState("");
-  const [metaTitle, setMetaTitle] = useState("");
-  const [metaDescription, setMetaDescription] = useState("");
-  const [category, setCategory] = useState("Technology");
-  const [status, setStatus] = useState("Draft");
-  const [featuredImage, setFeaturedImage] = useState("");
+export function AdminEditorForm({
+  initialData,
+  categories,
+}: {
+  initialData?: AdminEditorInitialData;
+  categories: string[];
+}) {
+  const [title, setTitle] = useState(initialData?.title ?? "");
+  const [slug, setSlug] = useState(initialData?.slug ?? "");
+  const [excerpt, setExcerpt] = useState(initialData?.excerpt ?? "");
+  const [content, setContent] = useState(initialData?.content ?? "");
+  const [metaTitle, setMetaTitle] = useState(initialData?.metaTitle ?? "");
+  const [metaDescription, setMetaDescription] = useState(initialData?.metaDescription ?? "");
+  const [category, setCategory] = useState(initialData?.category ?? categories[0] ?? "Technology");
+  const [status, setStatus] = useState(initialData?.status ?? "Draft");
+  const [featuredImage, setFeaturedImage] = useState(initialData?.featuredImage ?? "");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [hasCustomSlug, setHasCustomSlug] = useState(false);
-  const [hasCustomMetaTitle, setHasCustomMetaTitle] = useState(false);
-  const [hasCustomMetaDescription, setHasCustomMetaDescription] = useState(false);
+  const [hasCustomSlug, setHasCustomSlug] = useState(Boolean(initialData?.slug));
+  const [hasCustomMetaTitle, setHasCustomMetaTitle] = useState(Boolean(initialData?.metaTitle));
+  const [hasCustomMetaDescription, setHasCustomMetaDescription] = useState(Boolean(initialData?.metaDescription));
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+  const isEditing = Boolean(initialData?.articleId);
 
   const wordCount = useMemo(() => {
     const trimmed = content.trim();
@@ -186,8 +205,9 @@ export function AdminEditorForm() {
     setError("");
     setIsSubmitting(true);
 
-    const response = await fetch("/api/admin/articles", {
-      method: "POST",
+    const endpoint = isEditing ? `/api/admin/articles/${initialData?.articleId}` : "/api/admin/articles";
+    const response = await fetch(endpoint, {
+      method: isEditing ? "PATCH" : "POST",
       headers: {
         "Content-Type": "application/json",
       },
@@ -213,7 +233,30 @@ export function AdminEditorForm() {
     }
 
     const body = await response.json();
-    setError(body?.error || "Could not create article. Please try again.");
+    setError(body?.error || "Could not save article. Please try again.");
+  }
+
+  async function handleDelete() {
+    if (!initialData?.articleId) {
+      return;
+    }
+
+    const confirmed = window.confirm("Delete this article?");
+    if (!confirmed) {
+      return;
+    }
+
+    const response = await fetch(`/api/admin/articles/${initialData.articleId}`, {
+      method: "DELETE",
+    });
+
+    if (!response.ok) {
+      setError("Could not delete article.");
+      return;
+    }
+
+    router.push("/admin/dashboard");
+    router.refresh();
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -243,11 +286,17 @@ export function AdminEditorForm() {
     if (!response.ok) {
       const body = await response.json().catch(() => ({}));
       setError(body?.error || "Could not upload image.");
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
       return;
     }
 
     const body = await response.json();
     setFeaturedImage(body.url);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   }
 
   function resetSlugSuggestion() {
@@ -272,7 +321,7 @@ export function AdminEditorForm() {
           className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary-container py-3 text-sm font-semibold text-white transition-all hover:shadow-lg disabled:opacity-60"
         >
           <Calendar className="h-4 w-4" />
-          <span>{isSubmitting ? "Publishing..." : "Publish Article"}</span>
+          <span>{isSubmitting ? "Publishing..." : isEditing ? "Publish Update" : "Publish Article"}</span>
         </button>
         <div className="grid grid-cols-2 gap-3">
           <button
@@ -282,7 +331,7 @@ export function AdminEditorForm() {
             className="flex items-center justify-center gap-2 rounded-lg border border-slate-200 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
           >
             <Save className="h-4 w-4" />
-            <span>Save Draft</span>
+            <span>{isEditing ? "Update Draft" : "Save Draft"}</span>
           </button>
           <button
             type="button"
@@ -512,23 +561,45 @@ export function AdminEditorForm() {
         </label>
 
         <label className="block cursor-pointer rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 p-12 text-center text-slate-400 transition-colors hover:border-primary-container hover:bg-blue-50">
-          <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".jpg,.jpeg,.png,.webp,.gif,.avif,image/*"
+            onChange={handleImageUpload}
+            className="hidden"
+          />
           <UploadCloud className="mx-auto mb-4 h-10 w-10" />
           <p className="font-headline text-lg font-semibold text-slate-700">
             {isUploading ? "Uploading image..." : "Add Cover Image"}
           </p>
-          <p className="mt-2 text-xs font-semibold">Recommended size: 1200x630px (JPG, PNG)</p>
+          <p className="mt-2 text-xs font-semibold">
+            Recommended size: 1200x630px (JPG, PNG, WEBP, GIF, AVIF)
+          </p>
         </label>
 
         {featuredImage ? (
-          <img
-            src={featuredImage}
-            alt="Cover preview"
-            className="h-56 w-full rounded-xl border border-slate-200 object-cover"
-          />
+          <div className="flex h-72 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <img
+              src={featuredImage}
+              alt="Cover preview"
+              className="h-full w-full rounded object-contain"
+            />
+          </div>
         ) : null}
 
         {error ? <p className="text-sm text-red-500">{error}</p> : null}
+
+        {isEditing ? (
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={handleDelete}
+              className="rounded-lg border border-red-200 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+            >
+              Delete article
+            </button>
+          </div>
+        ) : null}
       </form>
     </AdminShell>
   );
