@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { Bell, Bookmark } from "lucide-react";
+import { Bookmark } from "lucide-react";
 import { Category } from "../../types";
 import { getSiteUserFromCookie } from "../../lib/site-auth";
 import { NavbarSearch } from "./NavbarSearch";
 import { NavbarMobileMenu } from "./NavbarMobileMenu";
+import { NotificationBell } from "./NotificationBell";
 
 export const Navbar = async () => {
   const user = await getSiteUserFromCookie();
@@ -46,13 +47,7 @@ export const Navbar = async () => {
             isAuthor={user?.role === "AUTHOR"}
             isLoggedIn={Boolean(user)}
           />
-          <button
-            className="relative rounded-full p-2 hover:bg-surface-container transition-colors"
-            aria-label="Notifications"
-          >
-            <Bell className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
-            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-secondary" />
-          </button>
+          <NotificationBell />
           <Link
             href="/settings"
             className="rounded-full p-2 hover:bg-surface-container transition-colors"

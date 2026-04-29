@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import {
-  Bell,
   HelpCircle,
   LayoutDashboard,
   Menu,
@@ -16,6 +15,7 @@ import {
   BarChart3,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
+import { NotificationBell } from "../layout/NotificationBell";
 
 interface AuthorShellProps {
   title: string;
@@ -114,9 +114,10 @@ export function AuthorShell({ title, subtitle, authorName, children }: AuthorShe
               className="w-52 rounded-lg border-none bg-surface-container-low px-4 py-1.5 text-sm focus:ring-2 focus:ring-primary xl:w-64"
             />
           </div>
-          <button className="rounded-full p-2 text-gray-600 transition-colors hover:bg-gray-50">
-            <Bell className="h-5 w-5" />
-          </button>
+          <NotificationBell
+            className="relative rounded-full p-2 text-gray-600 transition-colors hover:bg-gray-50"
+            iconClassName="h-5 w-5"
+          />
           <button className="rounded-full p-2 text-gray-600 transition-colors hover:bg-gray-50">
             <HelpCircle className="h-5 w-5" />
           </button>

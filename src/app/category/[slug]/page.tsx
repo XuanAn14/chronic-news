@@ -1,13 +1,14 @@
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { ArrowRight, ChevronRight, Mail, Search } from "lucide-react";
+import { ArrowRight, ChevronRight } from "lucide-react";
 import prisma from "../../../lib/prisma";
 import { hasConfiguredDatabase } from "../../../lib/env";
 import { categoryToSlug, mapDbArticle, slugToCategory } from "../../../lib/articles";
 import { FeedControls } from "../../../components/feed/FeedControls";
 import { Navbar } from "../../../components/layout/Navbar";
 import { Footer } from "../../../components/layout/Footer";
+import { ArticleCard } from "../../../components/ui/ArticleCard";
 import { Category } from "../../../types";
 
 export const revalidate = 60;
@@ -74,6 +75,39 @@ export default async function CategoryPage(props: {
   const latest = articles.slice(4, 10);
   const trending = [...articles].sort((a, b) => b.views - a.views).slice(0, 4);
 
+  const otherCategoryCounts = await prisma.article.groupBy({
+    by: ["category"],
+    where: {
+      status: "Published",
+      category: {
+        not: category,
+      },
+    },
+    _count: {
+      category: true,
+    },
+    orderBy: {
+      _count: {
+        category: "desc",
+      },
+    },
+    take: 4,
+  });
+
+  const relatedDesks = otherCategoryCounts.map((item) => item.category);
+  const crossDeskStories = relatedDesks.length
+    ? await prisma.article.findMany({
+        where: {
+          status: "Published",
+          category: {
+            in: relatedDesks,
+          },
+        },
+        orderBy: [{ publishedAt: "desc" }, { views: "desc" }],
+        take: 3,
+      })
+    : [];
+
   return (
     <div className="min-h-screen bg-surface text-on-surface">
       <Navbar />
@@ -103,7 +137,10 @@ export default async function CategoryPage(props: {
               <div className="grid grid-cols-1 md:grid-cols-2">
                 <div className="relative h-[300px] overflow-hidden md:h-[480px]">
                   <Image
-                    src={hero.featuredImage || "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=1200&h=800&fit=crop"}
+                    src={
+                      hero.featuredImage ||
+                      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=1200&h=800&fit=crop"
+                    }
                     alt={hero.title}
                     fill
                     unoptimized
@@ -118,7 +155,7 @@ export default async function CategoryPage(props: {
                 </div>
                 <div className="flex flex-col justify-center p-6">
                   <span className="mb-2 text-xs font-semibold uppercase tracking-widest text-secondary">
-                    {hero.category} •{" "}
+                    {hero.category} {" · "}{" "}
                     {hero.publishedAt
                       ? new Date(hero.publishedAt).toLocaleTimeString("en-US", {
                           hour: "2-digit",
@@ -139,9 +176,6 @@ export default async function CategoryPage(props: {
                     >
                       Read Full Story
                     </Link>
-                    <button className="flex items-center gap-2 border border-outline px-6 py-2.5 text-xs font-semibold uppercase tracking-widest transition-all hover:bg-surface-container">
-                      Save for Later
-                    </button>
                   </div>
                 </div>
               </div>
@@ -250,39 +284,41 @@ export default async function CategoryPage(props: {
               </ul>
             </div>
 
-            <div className="bg-primary-container p-6 text-on-primary-container">
-              <Mail className="mb-2 h-8 w-8" />
-              <h3 className="font-headline text-lg font-semibold">The {category} Briefing</h3>
-              <p className="mb-4 mt-2 text-sm opacity-90">
-                New stories from the {category.toLowerCase()} desk, delivered as soon as they publish.
-              </p>
-              <input
-                type="email"
-                placeholder="Your email address"
-                className="mb-3 w-full rounded-sm border-none bg-white px-4 py-2 text-sm text-on-surface focus:ring-2 focus:ring-white/50"
-              />
-              <button className="w-full bg-on-background py-2.5 text-xs font-semibold uppercase tracking-widest text-white transition-colors hover:bg-black">
-                Subscribe Now
-              </button>
-            </div>
-
-            <div className="border border-outline-variant p-6">
-              <div className="mb-4 flex items-center gap-2">
-                <Search className="h-4 w-4 text-on-surface-variant" />
-                <h3 className="font-headline text-lg font-semibold">Explore Regions</h3>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {["World", "Politics", "Technology", "Science", "Business", "Lifestyle"].map((item) => (
-                  <Link
-                    key={item}
-                    href={`/category/${categoryToSlug(item)}`}
-                    className="rounded-sm bg-surface-container-high px-3 py-1 text-xs font-semibold transition-all hover:bg-primary hover:text-white"
-                  >
-                    {item}
-                  </Link>
+            {crossDeskStories.length ? (
+              <div className="space-y-4">
+                <div className="border border-outline-variant bg-white p-6">
+                  <h3 className="font-headline text-lg font-semibold">Across Other Desks</h3>
+                  <p className="mt-2 text-sm text-on-surface-variant">
+                    Fresh stories from related categories readers are also following.
+                  </p>
+                </div>
+                {crossDeskStories.map((article) => (
+                  <ArticleCard
+                    key={article.id}
+                    article={mapDbArticle(article)}
+                    variant="mini"
+                    className="rounded-xl border border-outline-variant bg-white p-4"
+                  />
                 ))}
               </div>
-            </div>
+            ) : null}
+
+            {relatedDesks.length ? (
+              <div className="border border-outline-variant p-6">
+                <h3 className="font-headline text-lg font-semibold">Explore More Categories</h3>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {relatedDesks.map((item) => (
+                    <Link
+                      key={item}
+                      href={`/category/${categoryToSlug(item)}`}
+                      className="rounded-sm bg-surface-container-high px-3 py-1 text-xs font-semibold transition-all hover:bg-primary hover:text-white"
+                    >
+                      {item}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </aside>
         </div>
       </main>

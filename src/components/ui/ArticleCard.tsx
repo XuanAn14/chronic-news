@@ -79,7 +79,7 @@ export const ArticleCard = ({
           </div>
           <div className="mt-4 flex items-center justify-between gap-3">
             <span className="text-xs text-on-surface-variant">
-              {article.date} â€¢ {article.readTime}
+              {article.date} {" · "} {article.readTime}
             </span>
             <button className="text-outline transition-colors hover:text-primary">
               <Bookmark className="h-4 w-4" />
@@ -113,7 +113,7 @@ export const ArticleCard = ({
           </Link>
           <div className="mt-4 flex flex-col gap-3 text-sm text-white/80 sm:mt-6 sm:flex-row sm:items-center sm:gap-6">
             <span>
-              By {article.author.name} â€¢ {article.date}
+              By {article.author.name} {" · "} {article.date}
             </span>
             <button className="flex items-center gap-2 hover:text-white">
               <Bookmark className="h-4 w-4" />

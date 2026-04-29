@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 type Mode = "login" | "register";
 
@@ -48,33 +49,24 @@ export function AuthForm() {
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-12 text-slate-900">
       <div className="mx-auto grid w-full max-w-6xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl lg:grid-cols-[1.05fr_0.95fr]">
-        <div className="flex flex-col justify-between bg-slate-900 p-10 text-white">
-          <div>
+        <div className="relative hidden min-h-[640px] overflow-hidden bg-slate-900 lg:block">
+          <Image
+            src="https://images.unsplash.com/photo-1495020689067-958852a7765e?w=1200&h=1400&fit=crop"
+            alt="Chronicle welcome"
+            fill
+            priority
+            unoptimized
+            className="object-cover"
+            sizes="50vw"
+          />
+          <div className="absolute inset-0 bg-slate-950/55" />
+          <div className="absolute inset-x-0 bottom-0 p-10 text-white">
             <p className="text-sm font-semibold uppercase tracking-[0.28em] text-blue-300">
               Chronicle Account
             </p>
-            <h1 className="mt-6 font-headline text-5xl font-bold leading-tight">
-              Personalize your reading and keep your account synced.
+            <h1 className="mt-4 max-w-lg font-headline text-4xl font-bold leading-tight">
+              Welcome back to your daily reading desk.
             </h1>
-            <p className="mt-4 max-w-md text-sm leading-6 text-slate-300">
-              Create an account to manage saved content, keep profile information in the
-              database, and access reader settings across sessions.
-            </p>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="rounded-xl border border-white/10 bg-white/5 p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                Account storage
-              </p>
-              <p className="mt-3 text-lg font-semibold">Prisma + Supabase</p>
-            </div>
-            <div className="rounded-xl border border-white/10 bg-white/5 p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                Default state
-              </p>
-              <p className="mt-3 text-lg font-semibold">Logged out</p>
-            </div>
           </div>
         </div>
 

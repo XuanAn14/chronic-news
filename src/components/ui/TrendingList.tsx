@@ -1,18 +1,18 @@
 import Link from "next/link";
 import { TrendingUp } from "lucide-react";
-import { TRENDING_ARTICLES } from "../../constants";
 import { cn } from "../../lib/utils";
 import { getTrendingArticlesCached } from "../../lib/content-cache";
 
 export const TrendingList = async ({ className }: { className?: string }) => {
-  const cachedTrending = await getTrendingArticlesCached(3);
-  const trendingArticles = cachedTrending.length
-    ? cachedTrending.map((article) => ({
-        id: article.slug,
-        title: article.title,
-        views: article.views?.toLocaleString() ?? "0",
-      }))
-    : TRENDING_ARTICLES;
+  const trendingArticles = (await getTrendingArticlesCached(3)).map((article) => ({
+    id: article.slug,
+    title: article.title,
+    views: article.views?.toLocaleString() ?? "0",
+  }));
+
+  if (!trendingArticles.length) {
+    return null;
+  }
 
   return (
     <aside className={cn("space-y-12", className)}>
