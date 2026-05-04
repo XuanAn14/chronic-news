@@ -124,13 +124,9 @@ async function createArticle(input: PublishArticleInput) {
     };
   }
 
-  if (!isAllowedFeaturedImage(featuredImage)) {
-    return {
-      ok: false as const,
-      status: 400,
-      error: "Featured image must be an uploaded image or an allowed HTTPS image URL.",
-    };
-  }
+  const resolvedFeaturedImage = isAllowedFeaturedImage(featuredImage)
+    ? featuredImage || DEFAULT_FEATURED_IMAGE
+    : DEFAULT_FEATURED_IMAGE;
 
   if (externalId) {
     const existing = await prisma.article.findUnique({
@@ -172,7 +168,7 @@ async function createArticle(input: PublishArticleInput) {
         category: asString(input.category) || "Technology",
         status,
         author: asString(input.author) || "API Publisher",
-        featuredImage: featuredImage || DEFAULT_FEATURED_IMAGE,
+        featuredImage: resolvedFeaturedImage,
         publishedAt,
         views: 0,
         likesCount: 0,

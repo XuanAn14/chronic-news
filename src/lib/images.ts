@@ -1,4 +1,20 @@
-const allowedRemoteImageHosts = new Set(["images.unsplash.com"]);
+const allowedRemoteImageHosts = new Set([
+  "images.unsplash.com",
+  "i1-english.vnecdn.net",
+  "i-vnexpress.net",
+  "s.vnecdn.net",
+  "vnecdn.net",
+  "ichef.bbci.co.uk",
+  "static.bbci.co.uk",
+  "media.reuters.com",
+  "cloudfront.net",
+  "cdn.cnn.com",
+  "s.yimg.com",
+  "dims.apnews.com",
+  "imageio.forbes.com",
+  "static01.nyt.com",
+  "images.wsj.net",
+]);
 
 export function detectImageType(buffer: Buffer) {
   if (
