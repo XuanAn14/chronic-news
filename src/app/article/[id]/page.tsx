@@ -6,13 +6,11 @@ import { ChevronRight } from "lucide-react";
 import { TrendingList } from "../../../components/ui/TrendingList";
 import { Navbar } from "../../../components/layout/Navbar";
 import { Footer } from "../../../components/layout/Footer";
-import prisma from "../../../lib/prisma";
 import { hasConfiguredDatabase } from "../../../lib/env";
-import { getSiteUserFromCookie } from "../../../lib/site-auth";
 import { ArticleInteractions } from "../../../components/article/ArticleInteractions";
 import { mapDbArticle } from "../../../lib/articles";
 import { ArticleCard } from "../../../components/ui/ArticleCard";
-import { getRelatedArticlesCached } from "../../../lib/content-cache";
+import { getArticleDetailCached, getRelatedArticlesCached } from "../../../lib/content-cache";
 
 export async function generateMetadata(props: {
   params: Promise<{ id: string }>;
@@ -23,15 +21,7 @@ export async function generateMetadata(props: {
     return {};
   }
 
-  const article = await prisma.article.findUnique({
-    where: { slug: params.id },
-    select: {
-      title: true,
-      excerpt: true,
-      metaTitle: true,
-      metaDescription: true,
-    },
-  });
+  const article = await getArticleDetailCached(params.id);
 
   if (!article) {
     return {};
@@ -67,54 +57,7 @@ export default async function ArticleDetail(props: { params: Promise<{ id: strin
     );
   }
 
-  const user = await getSiteUserFromCookie();
-
-  const article = await prisma.article.findUnique({
-    where: {
-      slug: params.id,
-    },
-    include: {
-      likes: user
-        ? {
-            where: {
-              userId: user.id,
-            },
-            select: {
-              id: true,
-            },
-          }
-        : false,
-      comments: {
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-      },
-      saves: user
-        ? {
-            where: {
-              userId: user.id,
-            },
-            select: {
-              id: true,
-            },
-          }
-        : false,
-      _count: {
-        select: {
-          likes: true,
-          comments: true,
-        },
-      },
-    },
-  });
+  const article = await getArticleDetailCached(params.id);
 
   if (!article || article.status !== "Published") {
     return notFound();
@@ -170,7 +113,6 @@ export default async function ArticleDetail(props: { params: Promise<{ id: strin
                 width={1200}
                 height={630}
                 priority
-                unoptimized
                 className="h-full w-full object-cover"
                 sizes="(max-width: 1024px) 100vw, 1200px"
               />
@@ -192,18 +134,13 @@ export default async function ArticleDetail(props: { params: Promise<{ id: strin
 
               <ArticleInteractions
                 articleId={article.id}
-                initialLikes={article._count.likes}
-                initialComments={article._count.comments}
+                initialLikes={article.likesCount}
+                initialComments={article.commentsCount}
                 initialViews={article.views + 1}
-                initialLiked={Array.isArray(article.likes) ? article.likes.length > 0 : false}
-                initialSaved={Array.isArray(article.saves) ? article.saves.length > 0 : false}
-                initialCommentList={article.comments.map((comment) => ({
-                  id: comment.id,
-                  authorName: comment.user.name,
-                  content: comment.content,
-                  createdAt: comment.createdAt.toISOString(),
-                }))}
-                isLoggedIn={Boolean(user)}
+                initialLiked={false}
+                initialSaved={false}
+                initialCommentList={[]}
+                isLoggedIn={false}
               />
 
               <section className="rounded-2xl border border-outline-variant bg-surface-container-low p-8">

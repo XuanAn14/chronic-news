@@ -53,6 +53,7 @@ export function ArticleInteractions({
   const [views, setViews] = useState(initialViews);
   const [liked, setLiked] = useState(initialLiked);
   const [saved, setSaved] = useState(initialSaved);
+  const [loggedIn, setLoggedIn] = useState(isLoggedIn);
   const [shared, setShared] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [commentList, setCommentList] = useState(initialCommentList);
@@ -100,8 +101,37 @@ export function ArticleInteractions({
     setViews(initialViews);
     setLiked(initialLiked);
     setSaved(initialSaved);
+    setLoggedIn(isLoggedIn);
     setCommentList(initialCommentList);
-  }, [initialLikes, initialComments, initialLiked, initialSaved, initialCommentList, initialViews]);
+  }, [initialLikes, initialComments, initialLiked, initialSaved, initialCommentList, initialViews, isLoggedIn]);
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadInteractions() {
+      const response = await fetch(`/api/articles/${articleId}/comments`, {
+        cache: "no-store",
+      }).catch(() => null);
+
+      if (!response?.ok || ignore) {
+        return;
+      }
+
+      const body = await response.json().catch(() => ({}));
+      setLikes(typeof body?.likesCount === "number" ? body.likesCount : initialLikes);
+      setComments(typeof body?.commentsCount === "number" ? body.commentsCount : initialComments);
+      setLiked(Boolean(body?.liked));
+      setSaved(Boolean(body?.saved));
+      setLoggedIn(Boolean(body?.isLoggedIn));
+      setCommentList(Array.isArray(body?.comments) ? body.comments : []);
+    }
+
+    void loadInteractions();
+
+    return () => {
+      ignore = true;
+    };
+  }, [articleId, initialComments, initialLikes, initialViews]);
 
   useEffect(() => {
     const sessionKey = `chronicle:viewed:${articleId}`;
@@ -154,7 +184,7 @@ export function ArticleInteractions({
   }, [articleId]);
 
   async function handleLike() {
-    if (!isLoggedIn) {
+    if (!loggedIn) {
       router.push("/login");
       return;
     }
@@ -174,7 +204,7 @@ export function ArticleInteractions({
   }
 
   async function handleSave() {
-    if (!isLoggedIn) {
+    if (!loggedIn) {
       router.push("/login");
       return;
     }
@@ -219,7 +249,7 @@ export function ArticleInteractions({
   async function handleCommentSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!isLoggedIn) {
+    if (!loggedIn) {
       router.push("/login");
       return;
     }
@@ -320,7 +350,7 @@ export function ArticleInteractions({
               value={commentText}
               onChange={(event) => setCommentText(event.target.value)}
               rows={3}
-              placeholder={isLoggedIn ? "Add your comment..." : "Sign in to comment"}
+              placeholder={loggedIn ? "Add your comment..." : "Sign in to comment"}
               className="w-full rounded-xl border border-outline-variant bg-surface-container-low px-4 py-3 text-sm outline-none focus:border-primary"
             />
             <div className="flex justify-stretch sm:justify-end">

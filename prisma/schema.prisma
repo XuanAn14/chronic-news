@@ -87,6 +87,11 @@ model Article {
   saves         ArticleSave[]
   comments      ArticleComment[]
   viewHistory   ArticleViewHistory[]
+
+  @@index([status, publishedAt])
+  @@index([status, category, publishedAt])
+  @@index([status, views, publishedAt])
+  @@index([category])
 }
 
 model ArticleLike {
@@ -108,6 +113,8 @@ model ArticleComment {
   user      SiteUser @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String
   createdAt DateTime @default(now())
+
+  @@index([articleId, createdAt])
 }
 
 model ArticleSave {

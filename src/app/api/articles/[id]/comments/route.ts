@@ -3,6 +3,81 @@ import { revalidatePath } from "next/cache";
 import prisma from "../../../../../lib/prisma";
 import { getSiteUserFromCookie } from "../../../../../lib/site-auth";
 
+export async function GET(
+  _request: Request,
+  context: { params: Promise<{ id: string }> },
+) {
+  const user = await getSiteUserFromCookie();
+  const { id } = await context.params;
+
+  const [article, comments, liked, saved] = await Promise.all([
+    prisma.article.findUnique({
+      where: { id },
+      select: {
+        views: true,
+        likesCount: true,
+        commentsCount: true,
+      },
+    }),
+    prisma.articleComment.findMany({
+      where: { articleId: id },
+      orderBy: { createdAt: "desc" },
+      take: 25,
+      select: {
+        id: true,
+        content: true,
+        createdAt: true,
+        user: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    }),
+    user
+      ? prisma.articleLike.findUnique({
+          where: {
+            articleId_userId: {
+              articleId: id,
+              userId: user.id,
+            },
+          },
+          select: { id: true },
+        })
+      : Promise.resolve(null),
+    user
+      ? prisma.articleSave.findUnique({
+          where: {
+            articleId_userId: {
+              articleId: id,
+              userId: user.id,
+            },
+          },
+          select: { id: true },
+        })
+      : Promise.resolve(null),
+  ]);
+
+  if (!article) {
+    return NextResponse.json({ error: "Article not found." }, { status: 404 });
+  }
+
+  return NextResponse.json({
+    isLoggedIn: Boolean(user),
+    liked: Boolean(liked),
+    saved: Boolean(saved),
+    likesCount: article.likesCount,
+    commentsCount: article.commentsCount,
+    viewsCount: article.views,
+    comments: comments.map((comment) => ({
+      id: comment.id,
+      authorName: comment.user.name,
+      content: comment.content,
+      createdAt: comment.createdAt.toISOString(),
+    })),
+  });
+}
+
 export async function POST(
   request: Request,
   context: { params: Promise<{ id: string }> },

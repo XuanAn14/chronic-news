@@ -2,7 +2,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ArrowRight, ChevronRight } from "lucide-react";
-import prisma from "../../../lib/prisma";
 import { hasConfiguredDatabase } from "../../../lib/env";
 import { categoryToSlug, mapDbArticle, slugToCategory } from "../../../lib/articles";
 import { FeedControls } from "../../../components/feed/FeedControls";
@@ -10,6 +9,11 @@ import { Navbar } from "../../../components/layout/Navbar";
 import { Footer } from "../../../components/layout/Footer";
 import { ArticleCard } from "../../../components/ui/ArticleCard";
 import { Category } from "../../../types";
+import {
+  getCategoryArticlesCached,
+  getCrossDeskArticlesCached,
+  getOtherCategoryCountsCached,
+} from "../../../lib/content-cache";
 
 export const revalidate = 60;
 
@@ -31,27 +35,7 @@ export default async function CategoryPage(props: {
     return notFound();
   }
 
-  const articles = await prisma.article.findMany({
-    where: {
-      status: "Published",
-      category,
-      ...(query
-        ? {
-            OR: [
-              { title: { contains: query, mode: "insensitive" } },
-              { excerpt: { contains: query, mode: "insensitive" } },
-              { content: { contains: query, mode: "insensitive" } },
-              { author: { contains: query, mode: "insensitive" } },
-            ],
-          }
-        : {}),
-    },
-    orderBy:
-      sort === "popular"
-        ? [{ views: "desc" }, { publishedAt: "desc" }]
-        : [{ publishedAt: "desc" }, { createdAt: "desc" }],
-    take: 20,
-  });
+  const articles = await getCategoryArticlesCached(category, query, sort, 20);
 
   if (!articles.length) {
     return (
@@ -75,38 +59,10 @@ export default async function CategoryPage(props: {
   const latest = articles.slice(4, 10);
   const trending = [...articles].sort((a, b) => b.views - a.views).slice(0, 4);
 
-  const otherCategoryCounts = await prisma.article.groupBy({
-    by: ["category"],
-    where: {
-      status: "Published",
-      category: {
-        not: category,
-      },
-    },
-    _count: {
-      category: true,
-    },
-    orderBy: {
-      _count: {
-        category: "desc",
-      },
-    },
-    take: 4,
-  });
+  const otherCategoryCounts = await getOtherCategoryCountsCached(category, 4);
 
   const relatedDesks = otherCategoryCounts.map((item) => item.category);
-  const crossDeskStories = relatedDesks.length
-    ? await prisma.article.findMany({
-        where: {
-          status: "Published",
-          category: {
-            in: relatedDesks,
-          },
-        },
-        orderBy: [{ publishedAt: "desc" }, { views: "desc" }],
-        take: 3,
-      })
-    : [];
+  const crossDeskStories = await getCrossDeskArticlesCached(relatedDesks, 3);
 
   return (
     <div className="min-h-screen bg-surface text-on-surface">
@@ -143,7 +99,7 @@ export default async function CategoryPage(props: {
                     }
                     alt={hero.title}
                     fill
-                    unoptimized
+                    priority
                     className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                     sizes="(max-width: 768px) 100vw, 50vw"
                   />
@@ -194,7 +150,6 @@ export default async function CategoryPage(props: {
                         src={mapped.image}
                         alt={article.title}
                         fill
-                        unoptimized
                         className="h-full w-full object-cover"
                         sizes="(max-width: 768px) 100vw, 33vw"
                       />

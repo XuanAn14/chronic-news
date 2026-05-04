@@ -5,10 +5,9 @@ import { TrendingList } from "../components/ui/TrendingList";
 import { Navbar } from "../components/layout/Navbar";
 import { Footer } from "../components/layout/Footer";
 import { FeedControls } from "../components/feed/FeedControls";
-import prisma from "../lib/prisma";
-import { hasConfiguredDatabase } from "../lib/env";
 import { Category, type Article } from "../types";
 import { categoryToSlug, mapDbArticle, normalizeCategory } from "../lib/articles";
+import { getHomeArticlesCached } from "../lib/content-cache";
 
 export const revalidate = 60;
 
@@ -20,46 +19,7 @@ export default async function Home(props: {
   const selectedCategory = searchParams?.category?.trim() || "";
   const sort = searchParams?.sort === "popular" ? "popular" : "latest";
 
-  let articles: Array<{
-    id: string;
-    slug: string;
-    title: string;
-    category: string;
-    author: string;
-    publishedAt: Date | null;
-    featuredImage: string | null;
-    excerpt: string;
-    views: number;
-  }> = [];
-
-  if (hasConfiguredDatabase()) {
-    try {
-      articles = await prisma.article.findMany({
-        where: {
-          status: "Published",
-          ...(selectedCategory ? { category: selectedCategory } : {}),
-          ...(query
-            ? {
-                OR: [
-                  { title: { contains: query, mode: "insensitive" } },
-                  { excerpt: { contains: query, mode: "insensitive" } },
-                  { content: { contains: query, mode: "insensitive" } },
-                  { author: { contains: query, mode: "insensitive" } },
-                ],
-              }
-            : {}),
-        },
-        orderBy:
-          sort === "popular"
-            ? [{ views: "desc" }, { publishedAt: "desc" }]
-            : [{ publishedAt: "desc" }, { createdAt: "desc" }],
-        take: 20,
-      });
-    } catch (error) {
-      console.warn("Prisma fetch failed, falling back to static articles", error);
-      articles = [];
-    }
-  }
+  const articles = await getHomeArticlesCached(query, selectedCategory, sort, 20);
 
   const featuredArticle = articles.length > 0 ? mapDbArticle(articles[0]) : null;
   const categoryCountMap = new Map<Category, number>();
