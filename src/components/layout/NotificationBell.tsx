@@ -20,7 +20,8 @@ interface NotificationBellProps {
 
 export function NotificationBell({ className, iconClassName }: NotificationBellProps) {
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [emptyMessage, setEmptyMessage] = useState("No notifications yet.");
   const rootRef = useRef<HTMLDivElement>(null);
@@ -38,17 +39,15 @@ export function NotificationBell({ className, iconClassName }: NotificationBellP
     if (!response || !response.ok) {
       setItems([]);
       setEmptyMessage("Could not load notifications.");
+      setHasLoaded(true);
       return;
     }
 
     const body = await response.json().catch(() => ({}));
     setItems(Array.isArray(body?.items) ? body.items : []);
     setEmptyMessage(body?.emptyMessage || "No notifications yet.");
+    setHasLoaded(true);
   }
-
-  useEffect(() => {
-    void loadNotifications();
-  }, []);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -70,7 +69,7 @@ export function NotificationBell({ className, iconClassName }: NotificationBellP
         onClick={() => {
           const nextOpen = !open;
           setOpen(nextOpen);
-          if (nextOpen) {
+          if (nextOpen && !hasLoaded) {
             void loadNotifications();
           }
         }}

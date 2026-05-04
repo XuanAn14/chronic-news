@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { Category } from "../../types";
 import { NavbarSearch } from "./NavbarSearch";
 import { NotificationBell } from "./NotificationBell";
 import { NavbarUserActions } from "./NavbarUserActions";
+import { PrefetchLink } from "../routing/PrefetchLink";
 
 export const Navbar = () => {
   const navCategories = Object.values(Category).slice(0, 6);
@@ -19,21 +21,25 @@ export const Navbar = () => {
           </Link>
           <nav className="hidden xl:flex gap-5 lg:gap-6">
             {navCategories.map((cat) => (
-              <Link
+              <PrefetchLink
                 key={cat}
                 href={`/category/${cat.toLowerCase()}`}
                 className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors"
               >
                 {cat}
-              </Link>
+              </PrefetchLink>
             ))}
           </nav>
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
-          <NavbarSearch />
+          <Suspense fallback={null}>
+            <NavbarSearch />
+          </Suspense>
           <NotificationBell />
-          <NavbarUserActions categories={navCategories} />
+          <Suspense fallback={null}>
+            <NavbarUserActions categories={navCategories} />
+          </Suspense>
         </div>
       </div>
     </header>

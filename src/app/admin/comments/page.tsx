@@ -16,9 +16,36 @@ export default async function AdminCommentsPage(props: {
   const selectedArticleId = searchParams?.articleId;
 
   const articles = await prisma.article.findMany({
-    include: {
-      comments: {
-        include: {
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      author: true,
+      status: true,
+      commentsCount: true,
+    },
+    orderBy: [{ commentsCount: "desc" }, { updatedAt: "desc" }],
+    take: 100,
+  });
+
+  const visibleArticleIds = selectedArticleId
+    ? [selectedArticleId]
+    : articles.filter((article) => article.commentsCount > 0).slice(0, 10).map((article) => article.id);
+
+  const visibleComments = visibleArticleIds.length
+    ? await prisma.articleComment.findMany({
+        where: {
+          articleId: {
+            in: visibleArticleIds,
+          },
+        },
+        orderBy: { createdAt: "desc" },
+        take: selectedArticleId ? 100 : 50,
+        select: {
+          id: true,
+          articleId: true,
+          content: true,
+          createdAt: true,
           user: {
             select: {
               name: true,
@@ -26,33 +53,36 @@ export default async function AdminCommentsPage(props: {
             },
           },
         },
-        orderBy: { createdAt: "desc" },
-      },
-      _count: {
-        select: {
-          comments: true,
-        },
-      },
-    },
-    orderBy: [{ commentsCount: "desc" }, { updatedAt: "desc" }],
+      })
+    : [];
+
+  const commentsByArticle = new Map<string, typeof visibleComments>();
+  visibleComments.forEach((comment) => {
+    commentsByArticle.set(comment.articleId, [
+      ...(commentsByArticle.get(comment.articleId) ?? []),
+      comment,
+    ]);
   });
 
-  const visibleArticles = selectedArticleId
-    ? articles.filter((article) => article.id === selectedArticleId)
-    : articles.filter((article) => article.comments.length > 0);
+  const visibleArticles = articles
+    .filter((article) => visibleArticleIds.includes(article.id))
+    .map((article) => ({
+      ...article,
+      comments: commentsByArticle.get(article.id) ?? [],
+    }));
 
   const rightPanel = (
     <div className="space-y-6">
       <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Commented Posts</p>
         <p className="mt-2 text-3xl font-bold text-slate-900">
-          {articles.filter((article) => article._count.comments > 0).length}
+          {articles.filter((article) => article.commentsCount > 0).length}
         </p>
       </div>
       <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Total Comments</p>
         <p className="mt-2 text-3xl font-bold text-blue-700">
-          {articles.reduce((sum, article) => sum + article._count.comments, 0)}
+          {articles.reduce((sum, article) => sum + article.commentsCount, 0)}
         </p>
       </div>
     </div>
@@ -102,7 +132,7 @@ export default async function AdminCommentsPage(props: {
                         {article.status}
                       </span>
                     </td>
-                    <td className="p-4 text-sm font-medium text-slate-700">{article._count.comments}</td>
+                    <td className="p-4 text-sm font-medium text-slate-700">{article.commentsCount}</td>
                     <td className="p-4 text-right">
                       <Link
                         href={`/admin/comments?articleId=${article.id}`}
@@ -127,7 +157,7 @@ export default async function AdminCommentsPage(props: {
                     <div>
                       <h2 className="text-xl font-bold text-slate-900">{article.title}</h2>
                       <p className="mt-1 text-sm text-slate-500">
-                        {article._count.comments} comments by readers
+                        {article.commentsCount} comments by readers
                       </p>
                     </div>
                     <Link

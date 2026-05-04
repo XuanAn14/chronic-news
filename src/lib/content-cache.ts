@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { unstable_cache } from "next/cache";
 import prisma from "./prisma";
 import { hasConfiguredDatabase } from "./env";
@@ -15,6 +16,17 @@ const articleCardSelect = {
 } as const;
 
 type ArticleSort = "latest" | "popular";
+type ArticleCardResult = {
+  id: string;
+  slug: string;
+  title: string;
+  category: string;
+  author: string;
+  publishedAt: Date | null;
+  featuredImage: string | null;
+  excerpt: string;
+  views: number;
+};
 
 function getArticleOrderBy(sort: ArticleSort) {
   return sort === "popular"
@@ -22,17 +34,44 @@ function getArticleOrderBy(sort: ArticleSort) {
     : [{ publishedAt: "desc" as const }, { createdAt: "desc" as const }];
 }
 
-function getPublicArticleSearchWhere(query: string) {
-  return query
-    ? {
-        OR: [
-          { title: { contains: query, mode: "insensitive" as const } },
-          { excerpt: { contains: query, mode: "insensitive" as const } },
-          { content: { contains: query, mode: "insensitive" as const } },
-          { author: { contains: query, mode: "insensitive" as const } },
-        ],
-      }
-    : {};
+function getArticleSearchOrderBy(sort: ArticleSort) {
+  return sort === "popular"
+    ? Prisma.sql`"views" DESC, "publishedAt" DESC NULLS LAST`
+    : Prisma.sql`"publishedAt" DESC NULLS LAST, "createdAt" DESC`;
+}
+
+async function searchPublicArticles(
+  query: string,
+  selectedCategory: string,
+  sort: ArticleSort,
+  limit: number,
+) {
+  const searchQuery = query.trim();
+
+  return prisma.$queryRaw<ArticleCardResult[]>`
+    SELECT
+      "id",
+      "slug",
+      "title",
+      "category",
+      "author",
+      "publishedAt",
+      "featuredImage",
+      "excerpt",
+      "views"
+    FROM "Article"
+    WHERE "status" = 'Published'
+      ${selectedCategory ? Prisma.sql`AND "category" = ${selectedCategory}` : Prisma.empty}
+      AND to_tsvector(
+        'english',
+        coalesce("title", '') || ' ' ||
+        coalesce("excerpt", '') || ' ' ||
+        coalesce("content", '') || ' ' ||
+        coalesce("author", '')
+      ) @@ websearch_to_tsquery('english', ${searchQuery})
+    ORDER BY ${getArticleSearchOrderBy(sort)}
+    LIMIT ${limit}
+  `;
 }
 
 export const getHomeArticlesCached = unstable_cache(
@@ -41,11 +80,14 @@ export const getHomeArticlesCached = unstable_cache(
       return [];
     }
 
+    if (query.trim()) {
+      return searchPublicArticles(query, selectedCategory, sort, limit);
+    }
+
     return prisma.article.findMany({
       where: {
         status: "Published",
         ...(selectedCategory ? { category: selectedCategory } : {}),
-        ...getPublicArticleSearchWhere(query),
       },
       orderBy: getArticleOrderBy(sort),
       take: limit,
@@ -65,11 +107,14 @@ export const getCategoryArticlesCached = unstable_cache(
       return [];
     }
 
+    if (query.trim()) {
+      return searchPublicArticles(query, category, sort, limit);
+    }
+
     return prisma.article.findMany({
       where: {
         status: "Published",
         category,
-        ...getPublicArticleSearchWhere(query),
       },
       orderBy: getArticleOrderBy(sort),
       take: limit,

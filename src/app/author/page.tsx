@@ -19,24 +19,28 @@ export default async function AuthorPage() {
     where: {
       siteAuthorId: author.id,
     },
-    include: {
-      _count: {
-        select: {
-          likes: true,
-          comments: true,
-        },
-      },
+    select: {
+      id: true,
+      title: true,
+      status: true,
+      views: true,
+      likesCount: true,
+      commentsCount: true,
+      excerpt: true,
+      featuredImage: true,
+      updatedAt: true,
     },
     orderBy: {
       updatedAt: "desc",
     },
+    take: 50,
   });
 
   const totalReads = articles.reduce((sum, article) => sum + article.views, 0);
-  const totalLikes = articles.reduce((sum, article) => sum + article._count.likes, 0);
-  const totalComments = articles.reduce((sum, article) => sum + article._count.comments, 0);
+  const totalLikes = articles.reduce((sum, article) => sum + article.likesCount, 0);
+  const totalComments = articles.reduce((sum, article) => sum + article.commentsCount, 0);
   const totalWords = articles.reduce(
-    (sum, article) => sum + article.content.split(/\s+/).filter(Boolean).length,
+    (sum, article) => sum + article.excerpt.split(/\s+/).filter(Boolean).length,
     0,
   );
   const avgReadMinutes = articles.length ? Math.max(1, Math.round(totalWords / articles.length / 220)) : 0;
@@ -120,7 +124,6 @@ export default async function AuthorPage() {
                             alt={article.title}
                             width={64}
                             height={40}
-                            unoptimized
                             className="h-10 w-16 rounded object-cover"
                           />
                           <span className="line-clamp-1 font-medium text-on-surface">{article.title}</span>
@@ -140,8 +143,8 @@ export default async function AuthorPage() {
                       <td className="px-4 py-4 text-right font-medium">{article.views.toLocaleString()}</td>
                       <td className="px-4 py-4 text-right">
                         <div className="flex justify-end gap-3 text-sm text-tertiary">
-                          <span>{article._count.comments} comments</span>
-                          <span>{article._count.likes} likes</span>
+                          <span>{article.commentsCount} comments</span>
+                          <span>{article.likesCount} likes</span>
                         </div>
                       </td>
                       <td className="px-4 py-4 text-right">

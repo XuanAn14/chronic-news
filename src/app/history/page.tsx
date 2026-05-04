@@ -32,7 +32,6 @@ export default async function ReadingHistoryPage() {
               publishedAt: true,
               featuredImage: true,
               excerpt: true,
-              content: true,
               views: true,
             },
           },
@@ -40,6 +39,7 @@ export default async function ReadingHistoryPage() {
         orderBy: {
           viewedAt: "desc",
         },
+        take: 24,
       })
     : [];
 

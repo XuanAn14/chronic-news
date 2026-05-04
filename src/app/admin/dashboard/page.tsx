@@ -13,22 +13,31 @@ export default async function AdminDashboardPage() {
   }
 
   const articles = await prisma.article.findMany({
-    include: {
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      author: true,
+      category: true,
+      status: true,
+      views: true,
+      likesCount: true,
+      commentsCount: true,
+      updatedAt: true,
       _count: {
         select: {
-          comments: true,
-          likes: true,
           saves: true,
         },
       },
     },
     orderBy: { updatedAt: "desc" },
+    take: 100,
   });
 
   const publishedCount = articles.filter((item) => item.status === "Published").length;
   const draftCount = articles.filter((item) => item.status === "Draft").length;
   const totalViews = articles.reduce((sum, item) => sum + item.views, 0);
-  const totalComments = articles.reduce((sum, item) => sum + item._count.comments, 0);
+  const totalComments = articles.reduce((sum, item) => sum + item.commentsCount, 0);
   const latestArticle = articles[0];
 
   const rightPanel = (
@@ -160,7 +169,7 @@ export default async function AdminDashboardPage() {
                     </td>
                     <td className="p-4 text-sm text-slate-600">{article.views.toLocaleString()}</td>
                     <td className="p-4 text-sm text-slate-600">
-                      {article._count.likes} likes · {article._count.saves} saves
+                      {article.likesCount} likes · {article._count.saves} saves
                     </td>
                     <td className="p-4">
                       <Link
@@ -168,7 +177,7 @@ export default async function AdminDashboardPage() {
                         className="inline-flex items-center gap-2 text-sm font-medium text-primary-container hover:underline"
                       >
                         <MessageSquare className="h-4 w-4" />
-                        <span>{article._count.comments}</span>
+                        <span>{article.commentsCount}</span>
                       </Link>
                     </td>
                     <td className="p-4 text-sm text-slate-500">

@@ -6,11 +6,36 @@ import { ChevronRight } from "lucide-react";
 import { TrendingList } from "../../../components/ui/TrendingList";
 import { Navbar } from "../../../components/layout/Navbar";
 import { Footer } from "../../../components/layout/Footer";
+import prisma from "../../../lib/prisma";
 import { hasConfiguredDatabase } from "../../../lib/env";
 import { ArticleInteractions } from "../../../components/article/ArticleInteractions";
 import { mapDbArticle } from "../../../lib/articles";
 import { ArticleCard } from "../../../components/ui/ArticleCard";
+import { PrefetchLink } from "../../../components/routing/PrefetchLink";
 import { getArticleDetailCached, getRelatedArticlesCached } from "../../../lib/content-cache";
+
+export const revalidate = 300;
+
+export async function generateStaticParams() {
+  if (!hasConfiguredDatabase()) {
+    return [];
+  }
+
+  const articles = await prisma.article.findMany({
+    where: {
+      status: "Published",
+    },
+    orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
+    take: 100,
+    select: {
+      slug: true,
+    },
+  });
+
+  return articles.map((article) => ({
+    id: article.slug,
+  }));
+}
 
 export async function generateMetadata(props: {
   params: Promise<{ id: string }>;
@@ -75,9 +100,9 @@ export default async function ArticleDetail(props: { params: Promise<{ id: strin
               Home
             </Link>
             <ChevronRight className="h-3 w-3" />
-            <Link href={`/category/${article.category.toLowerCase()}`} className="hover:text-primary">
+            <PrefetchLink href={`/category/${article.category.toLowerCase()}`} className="hover:text-primary">
               {article.category}
-            </Link>
+            </PrefetchLink>
             <ChevronRight className="h-3 w-3" />
             <span className="line-clamp-1 text-on-surface">{article.title}</span>
           </nav>
@@ -161,12 +186,12 @@ export default async function ArticleDetail(props: { params: Promise<{ id: strin
                 <section className="space-y-6">
                   <div className="flex flex-col gap-3 border-b border-outline-variant pb-3 sm:flex-row sm:items-center sm:justify-between">
                     <h2 className="font-headline text-2xl font-bold">Related Articles</h2>
-                    <Link
+                    <PrefetchLink
                       href={`/category/${article.category.toLowerCase()}`}
                       className="text-xs font-bold uppercase tracking-widest text-primary hover:underline"
                     >
                       More in {article.category}
-                    </Link>
+                    </PrefetchLink>
                   </div>
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
                     {relatedArticles.map((relatedArticle) => (

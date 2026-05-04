@@ -25,6 +25,8 @@ model AdminSession {
   adminId   String
   expiresAt DateTime
   createdAt DateTime  @default(now())
+
+  @@index([adminId])
 }
 
 model Category {
@@ -59,6 +61,8 @@ model SiteSession {
   userId    String
   expiresAt DateTime
   createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 model Article {
@@ -92,6 +96,8 @@ model Article {
   @@index([status, category, publishedAt])
   @@index([status, views, publishedAt])
   @@index([category])
+  @@index([updatedAt])
+  @@index([siteAuthorId, updatedAt])
 }
 
 model ArticleLike {
@@ -103,6 +109,7 @@ model ArticleLike {
   createdAt DateTime @default(now())
 
   @@unique([articleId, userId])
+  @@index([userId, createdAt])
 }
 
 model ArticleComment {
@@ -137,6 +144,7 @@ model ArticleViewHistory {
   viewedAt  DateTime @default(now())
 
   @@unique([articleId, userId])
+  @@index([userId, viewedAt])
 }
 
 enum SiteUserRole {

@@ -50,19 +50,27 @@ export async function getAdminFromCookie() {
     return null;
   }
 
-  const session = await prisma.adminSession.findFirst({
+  const session = await prisma.adminSession.findUnique({
     where: {
       token,
-      expiresAt: {
-        gt: new Date(),
-      },
     },
-    include: {
-      admin: true,
+    select: {
+      expiresAt: true,
+      admin: {
+        select: {
+          id: true,
+          email: true,
+          name: true,
+        },
+      },
     },
   });
 
-  return session?.admin ?? null;
+  if (!session || session.expiresAt <= new Date()) {
+    return null;
+  }
+
+  return session.admin;
 }
 
 export function setAdminSessionCookie(response: NextResponse, token: string) {

@@ -9,6 +9,7 @@ import { Navbar } from "../../../components/layout/Navbar";
 import { Footer } from "../../../components/layout/Footer";
 import { ArticleCard } from "../../../components/ui/ArticleCard";
 import { Category } from "../../../types";
+import { PrefetchLink } from "../../../components/routing/PrefetchLink";
 import {
   getCategoryArticlesCached,
   getCrossDeskArticlesCached,
@@ -16,6 +17,12 @@ import {
 } from "../../../lib/content-cache";
 
 export const revalidate = 60;
+
+export function generateStaticParams() {
+  return Object.values(Category).map((category) => ({
+    slug: categoryToSlug(category),
+  }));
+}
 
 export default async function CategoryPage(props: {
   params: Promise<{ slug: string }>;
@@ -126,12 +133,12 @@ export default async function CategoryPage(props: {
                     {hero.excerpt}
                   </p>
                   <div className="flex items-center gap-4">
-                    <Link
+                    <PrefetchLink
                       href={`/article/${hero.slug}`}
                       className="bg-primary-container px-6 py-2.5 text-xs font-semibold uppercase tracking-widest text-on-primary-container transition-all hover:brightness-110"
                     >
                       Read Full Story
-                    </Link>
+                    </PrefetchLink>
                   </div>
                 </div>
               </div>
@@ -158,12 +165,12 @@ export default async function CategoryPage(props: {
                       <span className="text-xs font-semibold uppercase tracking-widest text-secondary">
                         {article.category}
                       </span>
-                      <Link
+                      <PrefetchLink
                         href={`/article/${article.slug}`}
                         className="mt-2 block font-headline text-lg font-semibold leading-tight hover:text-primary"
                       >
                         {article.title}
-                      </Link>
+                      </PrefetchLink>
                       <p className="mt-2 line-clamp-2 text-sm text-on-surface-variant">
                         {article.excerpt}
                       </p>
@@ -198,12 +205,12 @@ export default async function CategoryPage(props: {
                         : "Now"}
                     </span>
                     <div className="flex-1 border-b border-surface-container pb-6">
-                      <Link
+                      <PrefetchLink
                         href={`/article/${article.slug}`}
                         className="mb-1 block font-headline text-lg font-semibold transition-colors group-hover:text-primary"
                       >
                         {article.title}
-                      </Link>
+                      </PrefetchLink>
                       <p className="text-base text-on-surface-variant">{article.excerpt}</p>
                     </div>
                   </div>
@@ -224,12 +231,12 @@ export default async function CategoryPage(props: {
                       0{index + 1}
                     </span>
                     <div>
-                      <Link
+                      <PrefetchLink
                         href={`/article/${article.slug}`}
                         className="mb-1 block font-headline text-base font-semibold leading-tight transition-colors hover:text-primary"
                       >
                         {article.title}
-                      </Link>
+                      </PrefetchLink>
                       <span className="text-[10px] font-semibold uppercase tracking-widest text-on-surface-variant">
                         {article.views.toLocaleString()} Reads
                       </span>
@@ -263,13 +270,13 @@ export default async function CategoryPage(props: {
                 <h3 className="font-headline text-lg font-semibold">Explore More Categories</h3>
                 <div className="mt-4 flex flex-wrap gap-2">
                   {relatedDesks.map((item) => (
-                    <Link
+                    <PrefetchLink
                       key={item}
                       href={`/category/${categoryToSlug(item)}`}
                       className="rounded-sm bg-surface-container-high px-3 py-1 text-xs font-semibold transition-all hover:bg-primary hover:text-white"
                     >
                       {item}
-                    </Link>
+                    </PrefetchLink>
                   ))}
                 </div>
               </div>

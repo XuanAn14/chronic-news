@@ -47,7 +47,6 @@ export default async function UserSettings() {
               publishedAt: true,
               featuredImage: true,
               excerpt: true,
-              content: true,
               views: true,
             },
           },
@@ -55,6 +54,7 @@ export default async function UserSettings() {
         orderBy: {
           createdAt: "desc",
         },
+        take: 24,
       })
     : [];
 

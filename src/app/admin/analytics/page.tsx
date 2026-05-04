@@ -11,23 +11,29 @@ export default async function AdminAnalyticsPage() {
   }
 
   const articles = await prisma.article.findMany({
-    include: {
+    select: {
+      id: true,
+      title: true,
+      author: true,
+      status: true,
+      views: true,
+      likesCount: true,
+      commentsCount: true,
       _count: {
         select: {
-          likes: true,
-          comments: true,
           saves: true,
         },
       },
     },
     orderBy: [{ views: "desc" }, { updatedAt: "desc" }],
+    take: 100,
   });
 
   const totals = articles.reduce(
     (summary, article) => ({
       views: summary.views + article.views,
-      likes: summary.likes + article._count.likes,
-      comments: summary.comments + article._count.comments,
+      likes: summary.likes + article.likesCount,
+      comments: summary.comments + article.commentsCount,
       saves: summary.saves + article._count.saves,
     }),
     { views: 0, likes: 0, comments: 0, saves: 0 },
@@ -110,8 +116,8 @@ export default async function AdminAnalyticsPage() {
                     <p className="mt-1 text-sm text-slate-500">{article.author}</p>
                   </td>
                   <td className="p-4 text-sm font-medium text-slate-700">{article.views.toLocaleString()}</td>
-                  <td className="p-4 text-sm font-medium text-slate-700">{article._count.likes}</td>
-                  <td className="p-4 text-sm font-medium text-slate-700">{article._count.comments}</td>
+                  <td className="p-4 text-sm font-medium text-slate-700">{article.likesCount}</td>
+                  <td className="p-4 text-sm font-medium text-slate-700">{article.commentsCount}</td>
                   <td className="p-4 text-sm font-medium text-slate-700">{article._count.saves}</td>
                   <td className="p-4">
                     <span

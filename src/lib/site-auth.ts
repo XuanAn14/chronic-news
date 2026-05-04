@@ -74,19 +74,28 @@ export async function getSiteUserFromCookie() {
     return null;
   }
 
-  const session = await prisma.siteSession.findFirst({
+  const session = await prisma.siteSession.findUnique({
     where: {
       token,
-      expiresAt: {
-        gt: new Date(),
-      },
     },
-    include: {
-      user: true,
+    select: {
+      expiresAt: true,
+      user: {
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+        },
+      },
     },
   });
 
-  return session?.user ?? null;
+  if (!session || session.expiresAt <= new Date()) {
+    return null;
+  }
+
+  return session.user;
 }
 
 export function setSiteSessionCookie(response: NextResponse, token: string) {

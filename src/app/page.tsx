@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { ArticleCard } from "../components/ui/ArticleCard";
 import { TrendingList } from "../components/ui/TrendingList";
@@ -8,6 +7,7 @@ import { FeedControls } from "../components/feed/FeedControls";
 import { Category, type Article } from "../types";
 import { categoryToSlug, mapDbArticle, normalizeCategory } from "../lib/articles";
 import { getHomeArticlesCached } from "../lib/content-cache";
+import { PrefetchLink } from "../components/routing/PrefetchLink";
 
 export const revalidate = 60;
 
@@ -90,12 +90,12 @@ export default async function Home(props: {
                       <h2 className="font-headline text-2xl font-bold uppercase tracking-tight">
                         {sectionCategory}
                       </h2>
-                      <Link
+                      <PrefetchLink
                         href={`/category/${categoryToSlug(sectionCategory)}`}
                         className="flex items-center gap-1 text-xs font-bold text-primary hover:underline"
                       >
                         VIEW ALL <ChevronRight className="h-4 w-4" />
-                      </Link>
+                      </PrefetchLink>
                     </div>
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                       {sectionArticles.map((article) => (
@@ -116,9 +116,9 @@ export default async function Home(props: {
                       {(latestArticles.length ? latestArticles : articles.slice(0, 3)).map((article) => (
                         <article key={article.id} className="flex justify-between items-start border-b border-surface-container pb-4 last:border-0 group">
                           <div className="flex-1">
-                            <Link href={`/article/${article.slug}`} className="font-headline text-sm font-bold leading-tight transition-colors group-hover:text-secondary">
+                            <PrefetchLink href={`/article/${article.slug}`} className="font-headline text-sm font-bold leading-tight transition-colors group-hover:text-secondary">
                               {article.title}
-                            </Link>
+                            </PrefetchLink>
                             <span className="text-[10px] text-on-surface-variant font-bold mt-1 block uppercase tracking-wider">
                               {article.publishedAt
                                 ? new Date(article.publishedAt).toLocaleDateString("en-US", {
@@ -141,9 +141,9 @@ export default async function Home(props: {
                       {(popularArticles.length ? popularArticles : articles.slice(0, 3)).map((article) => (
                         <article key={article.id} className="flex justify-between items-start border-b border-surface-container pb-4 last:border-0 group">
                           <div className="flex-1">
-                            <Link href={`/article/${article.slug}`} className="font-headline text-sm font-bold leading-tight transition-colors group-hover:text-secondary">
+                            <PrefetchLink href={`/article/${article.slug}`} className="font-headline text-sm font-bold leading-tight transition-colors group-hover:text-secondary">
                               {article.title}
-                            </Link>
+                            </PrefetchLink>
                             <span className="text-[10px] text-on-surface-variant font-bold mt-1 block uppercase tracking-wider">
                               {article.views.toLocaleString()} reads
                             </span>

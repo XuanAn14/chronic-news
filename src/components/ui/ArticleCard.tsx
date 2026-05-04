@@ -1,9 +1,9 @@
 import React from "react";
-import Link from "next/link";
 import Image from "next/image";
 import { Bookmark } from "lucide-react";
 import { type Article } from "../../types";
 import { cn } from "../../lib/utils";
+import { PrefetchLink } from "../routing/PrefetchLink";
 
 interface ArticleCardProps {
   article: Article;
@@ -35,12 +35,12 @@ export const ArticleCard = ({
           <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-secondary">
             {article.category}
           </span>
-          <Link
+          <PrefetchLink
             href={`/article/${article.id}`}
             className="font-headline text-sm font-semibold leading-tight group-hover:text-primary"
           >
             {article.title}
-          </Link>
+          </PrefetchLink>
         </div>
       </article>
     );
@@ -68,12 +68,12 @@ export const ArticleCard = ({
             <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-secondary">
               {article.category}
             </span>
-            <Link
+            <PrefetchLink
               href={`/article/${article.id}`}
               className="font-headline text-lg font-bold leading-tight group-hover:text-primary"
             >
               {article.title}
-            </Link>
+            </PrefetchLink>
           </div>
           <div className="mt-4 flex items-center justify-between gap-3">
             <span className="text-xs text-on-surface-variant">
@@ -103,12 +103,12 @@ export const ArticleCard = ({
           <span className="mb-3 w-fit bg-primary px-3 py-1 text-xs font-bold uppercase text-white">
             {article.category}
           </span>
-          <Link
+          <PrefetchLink
             href={`/article/${article.id}`}
             className="font-headline text-2xl font-bold leading-tight text-white hover:underline md:text-4xl lg:text-5xl"
           >
             {article.title}
-          </Link>
+          </PrefetchLink>
           <div className="mt-4 flex flex-col gap-3 text-sm text-white/80 sm:mt-6 sm:flex-row sm:items-center sm:gap-6">
             <span>
               By {article.author.name} {" · "} {article.date}
@@ -137,12 +137,12 @@ export const ArticleCard = ({
       <span className="mb-2 block text-xs font-semibold uppercase tracking-widest text-primary">
         {article.category}
       </span>
-      <Link
+      <PrefetchLink
         href={`/article/${article.id}`}
         className="mb-2 block font-headline text-xl font-bold leading-tight group-hover:text-primary"
       >
         {article.title}
-      </Link>
+      </PrefetchLink>
       <p className="mb-4 line-clamp-2 text-sm text-on-surface-variant">{article.snippet}</p>
       <div className="flex items-center justify-between gap-3">
         <span className="text-xs text-on-surface-variant underline underline-offset-4 decoration-outline-variant">

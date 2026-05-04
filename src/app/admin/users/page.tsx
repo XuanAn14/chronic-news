@@ -11,12 +11,22 @@ export default async function AdminUsersPage() {
   }
 
   const users = await prisma.siteUser.findMany({
-    include: {
-      articles: true,
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      role: true,
+      createdAt: true,
+      _count: {
+        select: {
+          articles: true,
+        },
+      },
     },
     orderBy: {
       createdAt: "desc",
     },
+    take: 100,
   });
 
   const authorCount = users.filter((user) => user.role === "AUTHOR").length;
@@ -84,7 +94,7 @@ export default async function AdminUsersPage() {
                   <td className="p-4">
                     <UserRoleSelect userId={user.id} role={user.role} />
                   </td>
-                  <td className="p-4 text-sm text-slate-600">{user.articles.length}</td>
+                  <td className="p-4 text-sm text-slate-600">{user._count.articles}</td>
                   <td className="p-4 text-sm text-slate-600">
                     {new Date(user.createdAt).toLocaleDateString("en-US", {
                       month: "short",
