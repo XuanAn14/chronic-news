@@ -18,3 +18,25 @@ View your app in AI Studio: https://ai.studio/apps/f1275146-cdb9-4011-ba35-df5e8
 2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
 3. Run the app:
    `npm run dev`
+
+## Publish Articles By API
+
+Set `PUBLISH_API_KEY` in `.env`, then call:
+
+```bash
+curl -X POST http://localhost:3000/api/publish/articles \
+  -H "Authorization: Bearer $PUBLISH_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "externalId": "wire-2026-05-04-001",
+    "title": "Market Update",
+    "content": "First paragraph.\n\nSecond paragraph.",
+    "excerpt": "Short summary for cards.",
+    "category": "Markets",
+    "status": "Published",
+    "author": "Wire Desk",
+    "featuredImage": "/uploads/example.webp"
+  }'
+```
+
+For bulk publishing, send `{ "articles": [ ... ] }` with up to 100 articles. `externalId` is optional but recommended so retries do not create duplicates.
