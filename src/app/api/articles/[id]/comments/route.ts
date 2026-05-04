@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import prisma from "../../../../../lib/prisma";
 import { getSiteUserFromCookie } from "../../../../../lib/site-auth";
+import { checkRateLimit, getClientIp, rateLimitResponse } from "../../../../../lib/rate-limit";
 
 export async function GET(
   _request: Request,
@@ -82,12 +83,22 @@ export async function POST(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
+  const { id } = await context.params;
+  const rateLimit = checkRateLimit({
+    key: `article-comment:${getClientIp(request)}:${id}`,
+    limit: 10,
+    windowMs: 60 * 1000,
+  });
+
+  if (!rateLimit.allowed) {
+    return rateLimitResponse(rateLimit.retryAfter);
+  }
+
   const user = await getSiteUserFromCookie();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
-  const { id } = await context.params;
   const body = await request.json();
   const content = body?.content?.toString().trim();
 

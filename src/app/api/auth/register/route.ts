@@ -5,12 +5,22 @@ import {
   createSiteUser,
   setSiteSessionCookie,
 } from "../../../../lib/site-auth";
+import { checkRateLimit, getClientIp, rateLimitResponse } from "../../../../lib/rate-limit";
 
 export async function POST(request: Request) {
   const body = await request.json();
   const name = body?.name?.toString().trim();
   const email = body?.email?.toString().trim().toLowerCase();
   const password = body?.password?.toString();
+  const rateLimit = checkRateLimit({
+    key: `site-register:${getClientIp(request)}:${email || "missing"}`,
+    limit: 5,
+    windowMs: 60 * 60 * 1000,
+  });
+
+  if (!rateLimit.allowed) {
+    return rateLimitResponse(rateLimit.retryAfter);
+  }
 
   if (!name || !email || !password) {
     return NextResponse.json(

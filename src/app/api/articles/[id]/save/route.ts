@@ -2,17 +2,27 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import prisma from "../../../../../lib/prisma";
 import { getSiteUserFromCookie } from "../../../../../lib/site-auth";
+import { checkRateLimit, getClientIp, rateLimitResponse } from "../../../../../lib/rate-limit";
 
 export async function POST(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
+  const { id } = await context.params;
+  const rateLimit = checkRateLimit({
+    key: `article-save:${getClientIp(request)}:${id}`,
+    limit: 30,
+    windowMs: 60 * 1000,
+  });
+
+  if (!rateLimit.allowed) {
+    return rateLimitResponse(rateLimit.retryAfter);
+  }
+
   const user = await getSiteUserFromCookie();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
-
-  const { id } = await context.params;
 
   const existingSave = await prisma.articleSave.findUnique({
     where: {

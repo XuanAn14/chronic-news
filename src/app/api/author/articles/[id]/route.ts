@@ -3,6 +3,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import prisma from "../../../../../lib/prisma";
 import { getAuthorFromCookie } from "../../../../../lib/site-auth";
 import { slugify } from "../../../../../lib/editor";
+import { isAllowedFeaturedImage } from "../../../../../lib/images";
 
 async function generateUniqueSlug(preferredSlug: string, fallbackTitle: string, articleId: string) {
   const baseSlug = slugify(preferredSlug) || slugify(fallbackTitle) || "article";
@@ -51,6 +52,17 @@ export async function PATCH(
   if (!title || !excerpt || !content) {
     return NextResponse.json(
       { error: "Title, excerpt, and content are required." },
+      { status: 400 },
+    );
+  }
+
+  if (!["Draft", "Published"].includes(status)) {
+    return NextResponse.json({ error: "Invalid article status." }, { status: 400 });
+  }
+
+  if (!isAllowedFeaturedImage(featuredImage)) {
+    return NextResponse.json(
+      { error: "Featured image must be an uploaded image or an allowed HTTPS image URL." },
       { status: 400 },
     );
   }

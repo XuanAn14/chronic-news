@@ -2,11 +2,16 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import prisma from "./prisma";
+import {
+  hashPassword,
+  needsPasswordRehash,
+  verifyPassword,
+} from "./password";
 
 export const SITE_SESSION_COOKIE_NAME = "chronicle_site_session";
 
 export function hashSitePassword(password: string) {
-  return crypto.createHash("sha256").update(password).digest("hex");
+  return hashPassword(password);
 }
 
 export async function createSiteUser(input: {
@@ -44,8 +49,15 @@ export async function verifySiteCredentials(email: string, password: string) {
     return null;
   }
 
-  if (user.passwordHash !== hashSitePassword(password)) {
+  if (!verifyPassword(password, user.passwordHash)) {
     return null;
+  }
+
+  if (needsPasswordRehash(user.passwordHash)) {
+    await prisma.siteUser.update({
+      where: { id: user.id },
+      data: { passwordHash: hashSitePassword(password) },
+    });
   }
 
   return user;

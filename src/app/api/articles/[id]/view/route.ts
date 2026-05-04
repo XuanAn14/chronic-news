@@ -2,12 +2,23 @@ import { NextResponse } from "next/server";
 import prisma from "../../../../../lib/prisma";
 import { getSiteUserFromCookie } from "../../../../../lib/site-auth";
 import { revalidatePath } from "next/cache";
+import { checkRateLimit, getClientIp, rateLimitResponse } from "../../../../../lib/rate-limit";
 
 export async function POST(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params;
+  const rateLimit = checkRateLimit({
+    key: `article-view:${getClientIp(request)}:${id}`,
+    limit: 20,
+    windowMs: 60 * 1000,
+  });
+
+  if (!rateLimit.allowed) {
+    return rateLimitResponse(rateLimit.retryAfter);
+  }
+
   const user = await getSiteUserFromCookie();
 
   const article = await prisma.$transaction(async (tx) => {

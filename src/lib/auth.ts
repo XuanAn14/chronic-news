@@ -2,11 +2,16 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import prisma from "./prisma";
+import {
+  hashPassword as createPasswordHash,
+  needsPasswordRehash,
+  verifyPassword,
+} from "./password";
 
 export const SESSION_COOKIE_NAME = "chronicle_admin_session";
 
 export function hashPassword(password: string) {
-  return crypto.createHash("sha256").update(password).digest("hex");
+  return createPasswordHash(password);
 }
 
 export async function verifyAdminCredentials(email: string, password: string) {
@@ -15,8 +20,15 @@ export async function verifyAdminCredentials(email: string, password: string) {
     return null;
   }
 
-  if (admin.passwordHash !== hashPassword(password)) {
+  if (!verifyPassword(password, admin.passwordHash)) {
     return null;
+  }
+
+  if (needsPasswordRehash(admin.passwordHash)) {
+    await prisma.adminUser.update({
+      where: { id: admin.id },
+      data: { passwordHash: hashPassword(password) },
+    });
   }
 
   return admin;
