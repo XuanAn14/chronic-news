@@ -15,6 +15,8 @@ import {
   getCrossDeskArticlesCached,
   getOtherCategoryCountsCached,
 } from "../../../lib/content-cache";
+import { getSiteUserFromCookie } from "../../../lib/site-auth";
+import { getSavedArticleIdSet } from "../../../lib/saved-articles";
 
 export const revalidate = 60;
 
@@ -70,6 +72,13 @@ export default async function CategoryPage(props: {
 
   const relatedDesks = otherCategoryCounts.map((item) => item.category);
   const crossDeskStories = await getCrossDeskArticlesCached(relatedDesks, 3);
+  const user = await getSiteUserFromCookie();
+  const savedArticleIds = await getSavedArticleIdSet(user?.id, [
+    ...articles.map((article) => article.id),
+    ...crossDeskStories.map((article) => article.id),
+  ]);
+  const mapArticle = (article: (typeof articles)[number]) =>
+    mapDbArticle({ ...article, saved: savedArticleIds.has(article.id) });
 
   return (
     <div className="min-h-screen bg-surface text-on-surface">
@@ -146,7 +155,7 @@ export default async function CategoryPage(props: {
 
             <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
               {secondary.map((article) => {
-                const mapped = mapDbArticle(article);
+                const mapped = mapArticle(article);
                 return (
                   <article
                     key={article.id}
@@ -257,7 +266,7 @@ export default async function CategoryPage(props: {
                 {crossDeskStories.map((article) => (
                   <ArticleCard
                     key={article.id}
-                    article={mapDbArticle(article)}
+                    article={mapArticle(article)}
                     variant="mini"
                     className="rounded-xl border border-outline-variant bg-white p-4"
                   />

@@ -1,9 +1,9 @@
 import React from "react";
 import Image from "next/image";
-import { Bookmark } from "lucide-react";
 import { type Article } from "../../types";
 import { cn } from "../../lib/utils";
 import { PrefetchLink } from "../routing/PrefetchLink";
+import { SaveArticleButton } from "../article/SaveArticleButton";
 
 interface ArticleCardProps {
   article: Article;
@@ -16,6 +16,8 @@ export const ArticleCard = ({
   variant = "vertical",
   className,
 }: ArticleCardProps) => {
+  const saveArticleId = article.databaseId ?? article.id;
+
   if (variant === "mini") {
     return (
       <article className={cn("group flex gap-4", className)}>
@@ -79,9 +81,12 @@ export const ArticleCard = ({
             <span className="text-xs text-on-surface-variant">
               {article.date} {" · "} {article.readTime}
             </span>
-            <button className="text-outline transition-colors hover:text-primary">
-              <Bookmark className="h-4 w-4" />
-            </button>
+            <SaveArticleButton
+              articleId={saveArticleId}
+              initialSaved={article.saved}
+              className="text-outline transition-colors hover:text-primary"
+              activeClassName="text-amber-600"
+            />
           </div>
         </div>
       </article>
@@ -113,10 +118,13 @@ export const ArticleCard = ({
             <span>
               By {article.author.name} {" · "} {article.date}
             </span>
-            <button className="flex items-center gap-2 hover:text-white">
-              <Bookmark className="h-4 w-4" />
-              <span className="font-semibold">Read Later</span>
-            </button>
+            <SaveArticleButton
+              articleId={saveArticleId}
+              initialSaved={article.saved}
+              showLabel
+              className="flex items-center gap-2 hover:text-white"
+              activeClassName="text-amber-200"
+            />
           </div>
         </div>
       </article>
@@ -148,9 +156,12 @@ export const ArticleCard = ({
         <span className="text-xs text-on-surface-variant underline underline-offset-4 decoration-outline-variant">
           {article.date}
         </span>
-        <button className="text-outline transition-colors hover:text-primary">
-          <Bookmark className="h-4 w-4" />
-        </button>
+        <SaveArticleButton
+          articleId={saveArticleId}
+          initialSaved={article.saved}
+          className="text-outline transition-colors hover:text-primary"
+          activeClassName="text-amber-600"
+        />
       </div>
     </article>
   );

@@ -9,6 +9,7 @@ import { SiteLogoutButton } from "../../components/auth/SiteLogoutButton";
 import prisma from "../../lib/prisma";
 import { hasConfiguredDatabase } from "../../lib/env";
 import { mapDbArticle } from "../../lib/articles";
+import { getSavedArticleIdSet } from "../../lib/saved-articles";
 
 export default async function ReadingHistoryPage() {
   const user = await getSiteUserFromCookie();
@@ -25,6 +26,7 @@ export default async function ReadingHistoryPage() {
         include: {
           article: {
             select: {
+              id: true,
               slug: true,
               title: true,
               category: true,
@@ -42,6 +44,10 @@ export default async function ReadingHistoryPage() {
         take: 24,
       })
     : [];
+  const savedArticleIds = await getSavedArticleIdSet(
+    user.id,
+    readingHistory.map((entry) => entry.article.id),
+  );
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -84,7 +90,13 @@ export default async function ReadingHistoryPage() {
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     {readingHistory.map((entry) => (
                       <div key={entry.id} className="space-y-2">
-                        <ArticleCard article={mapDbArticle(entry.article)} variant="horizontal" />
+                        <ArticleCard
+                          article={mapDbArticle({
+                            ...entry.article,
+                            saved: savedArticleIds.has(entry.article.id),
+                          })}
+                          variant="horizontal"
+                        />
                         <p className="px-1 text-xs font-medium text-on-surface-variant">
                           Opened{" "}
                           {new Date(entry.viewedAt).toLocaleString("en-US", {

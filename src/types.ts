@@ -20,6 +20,7 @@ export interface Author {
 
 export interface Article {
   id: string;
+  databaseId?: string;
   title: string;
   category: Category;
   author: Author;
@@ -30,4 +31,5 @@ export interface Article {
   views?: string;
   content?: string[];
   isBreaking?: boolean;
+  saved?: boolean;
 }

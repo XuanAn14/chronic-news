@@ -24,10 +24,25 @@ export async function POST(
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
+  const article = await prisma.article.findFirst({
+    where: {
+      OR: [{ id }, { slug: id }],
+      status: "Published",
+    },
+    select: {
+      id: true,
+      slug: true,
+    },
+  });
+
+  if (!article) {
+    return NextResponse.json({ error: "Article not found." }, { status: 404 });
+  }
+
   const existingSave = await prisma.articleSave.findUnique({
     where: {
       articleId_userId: {
-        articleId: id,
+        articleId: article.id,
         userId: user.id,
       },
     },
@@ -37,7 +52,7 @@ export async function POST(
     await prisma.articleSave.delete({
       where: {
         articleId_userId: {
-          articleId: id,
+          articleId: article.id,
           userId: user.id,
         },
       },
@@ -45,21 +60,10 @@ export async function POST(
   } else {
     await prisma.articleSave.create({
       data: {
-        articleId: id,
+        articleId: article.id,
         userId: user.id,
       },
     });
-  }
-
-  const article = await prisma.article.findUnique({
-    where: { id },
-    select: {
-      slug: true,
-    },
-  });
-
-  if (!article) {
-    return NextResponse.json({ error: "Article not found." }, { status: 404 });
   }
 
   revalidatePath("/");

@@ -26,6 +26,7 @@ export function slugToCategory(slug: string) {
 }
 
 export function mapDbArticle(article: {
+  id?: string;
   slug: string;
   title: string;
   category: string;
@@ -35,11 +36,13 @@ export function mapDbArticle(article: {
   excerpt: string;
   content?: string;
   views?: number;
+  saved?: boolean;
 }): Article {
   const readTimeMinutes = estimateReadTimeMinutes(article.content, article.excerpt);
 
   return {
     id: article.slug,
+    databaseId: article.id,
     title: article.title,
     category: normalizeCategory(article.category),
     author: {
@@ -60,5 +63,6 @@ export function mapDbArticle(article: {
     snippet: article.excerpt,
     readTime: `${readTimeMinutes} min read`,
     views: article.views?.toLocaleString(),
+    saved: article.saved,
   };
 }

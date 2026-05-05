@@ -211,14 +211,19 @@ export function ArticleInteractions({
 
     const response = await fetch(`/api/articles/${articleId}/save`, {
       method: "POST",
-    });
+    }).catch(() => null);
 
-    if (!response.ok) {
+    if (response?.status === 401) {
+      router.push("/login");
       return;
     }
 
-    const body = await response.json();
-    setSaved(body.saved);
+    if (!response?.ok) {
+      return;
+    }
+
+    const body = await response.json().catch(() => ({}));
+    setSaved(Boolean(body?.saved));
     router.refresh();
   }
 

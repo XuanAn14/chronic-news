@@ -8,6 +8,8 @@ import { Category, type Article } from "../types";
 import { categoryToSlug, mapDbArticle, normalizeCategory } from "../lib/articles";
 import { getHomeArticlesCached } from "../lib/content-cache";
 import { PrefetchLink } from "../components/routing/PrefetchLink";
+import { getSiteUserFromCookie } from "../lib/site-auth";
+import { getSavedArticleIdSet } from "../lib/saved-articles";
 
 export const revalidate = 60;
 
@@ -20,8 +22,12 @@ export default async function Home(props: {
   const sort = searchParams?.sort === "popular" ? "popular" : "latest";
 
   const articles = await getHomeArticlesCached(query, selectedCategory, sort, 20);
+  const user = await getSiteUserFromCookie();
+  const savedArticleIds = await getSavedArticleIdSet(user?.id, articles.map((article) => article.id));
+  const mapArticle = (article: (typeof articles)[number]) =>
+    mapDbArticle({ ...article, saved: savedArticleIds.has(article.id) });
 
-  const featuredArticle = articles.length > 0 ? mapDbArticle(articles[0]) : null;
+  const featuredArticle = articles.length > 0 ? mapArticle(articles[0]) : null;
   const categoryCountMap = new Map<Category, number>();
   const articleGroups = new Map<Category, typeof articles>();
 
@@ -78,7 +84,7 @@ export default async function Home(props: {
               {prominentCategories.map((sectionCategory) => {
                 const sectionArticles = (articleGroups.get(sectionCategory) ?? [])
                   .slice(0, 4)
-                  .map<Article>(mapDbArticle);
+                  .map<Article>(mapArticle);
 
                 if (!sectionArticles.length) {
                   return null;
@@ -161,11 +167,11 @@ export default async function Home(props: {
                   </div>
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
                     {moreStories.map((article) => (
-                      <ArticleCard
-                        key={article.id}
-                        article={mapDbArticle(article)}
-                        className="rounded-xl bg-white"
-                      />
+                        <ArticleCard
+                          key={article.id}
+                          article={mapArticle(article)}
+                          className="rounded-xl bg-white"
+                        />
                     ))}
                   </div>
                 </section>

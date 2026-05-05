@@ -40,6 +40,7 @@ export default async function UserSettings() {
         include: {
           article: {
             select: {
+              id: true,
               slug: true,
               title: true,
               category: true,
@@ -100,7 +101,7 @@ export default async function UserSettings() {
                     {savedArticles.map((saved) => (
                       <ArticleCard
                         key={saved.id}
-                        article={mapDbArticle(saved.article)}
+                        article={mapDbArticle({ ...saved.article, saved: true })}
                         variant="horizontal"
                       />
                     ))}

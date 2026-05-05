@@ -13,6 +13,8 @@ import { mapDbArticle } from "../../../lib/articles";
 import { ArticleCard } from "../../../components/ui/ArticleCard";
 import { PrefetchLink } from "../../../components/routing/PrefetchLink";
 import { getArticleDetailCached, getRelatedArticlesCached } from "../../../lib/content-cache";
+import { getSiteUserFromCookie } from "../../../lib/site-auth";
+import { getSavedArticleIdSet } from "../../../lib/saved-articles";
 
 export const revalidate = 300;
 
@@ -89,6 +91,11 @@ export default async function ArticleDetail(props: { params: Promise<{ id: strin
   }
 
   const relatedArticles = await getRelatedArticlesCached(article.id, article.category, 3);
+  const user = await getSiteUserFromCookie();
+  const savedArticleIds = await getSavedArticleIdSet(user?.id, [
+    article.id,
+    ...relatedArticles.map((relatedArticle) => relatedArticle.id),
+  ]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -163,9 +170,9 @@ export default async function ArticleDetail(props: { params: Promise<{ id: strin
                 initialComments={article.commentsCount}
                 initialViews={article.views + 1}
                 initialLiked={false}
-                initialSaved={false}
+                initialSaved={savedArticleIds.has(article.id)}
                 initialCommentList={[]}
-                isLoggedIn={false}
+                isLoggedIn={Boolean(user)}
               />
 
               <section className="rounded-2xl border border-outline-variant bg-surface-container-low p-8">
@@ -197,7 +204,10 @@ export default async function ArticleDetail(props: { params: Promise<{ id: strin
                     {relatedArticles.map((relatedArticle) => (
                       <ArticleCard
                         key={relatedArticle.slug}
-                        article={mapDbArticle(relatedArticle)}
+                        article={mapDbArticle({
+                          ...relatedArticle,
+                          saved: savedArticleIds.has(relatedArticle.id),
+                        })}
                         className="rounded-xl bg-white"
                       />
                     ))}
